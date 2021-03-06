@@ -1,7 +1,6 @@
 package asset
 
 import (
-	"database/sql"
 	"testing"
 )
 
@@ -36,7 +35,7 @@ func TestNewAssetWithMultiplier(t *testing.T) {
 func TestGetSetPrice(t *testing.T) {
 	asset := NewAsset("ZZB AU")
 	priceFloat := 2.75
-	price := sql.NullFloat64{Float64: priceFloat, Valid: true}
+	price := Price{Float64: priceFloat, Valid: true}
 	asset.SetPrice(price)
 
 	actualPrice := asset.GetPrice().Float64
@@ -47,7 +46,7 @@ func TestGetSetPrice(t *testing.T) {
 
 func TestRevalue(t *testing.T) {
 	asset := NewAssetWithMultiplier("ZZB AU", 100.0)
-	price := sql.NullFloat64{Float64: 2.0, Valid: true}
+	price := Price{Float64: 2.0, Valid: true}
 	asset.SetPrice(price)
 
 	value := asset.GetValue()

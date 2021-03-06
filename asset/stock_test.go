@@ -1,7 +1,6 @@
 package asset
 
 import (
-	"database/sql"
 	"testing"
 )
 
@@ -12,7 +11,7 @@ func TestNewStock(t *testing.T) {
 	}
 
 	priceFloat := 2.0
-	price := sql.NullFloat64{Float64: priceFloat, Valid: true}
+	price := Price{Float64: priceFloat, Valid: true}
 	stock.SetPrice(price)
 
 	value := stock.GetValue()

@@ -5,8 +5,11 @@ import (
 	"database/sql"
 )
 
+// Price is the unit of measurement for asset price and value.
+type Price sql.NullFloat64
+
 var (
-	nullValue         = sql.NullFloat64{Float64: 0.0, Valid: false}
+	nullValue         = Price{Float64: 0.0, Valid: false}
 	defaultMultiplier = 1.0
 )
 
@@ -14,8 +17,8 @@ var (
 type Asset struct {
 	ticker     string
 	multiplier float64
-	price      sql.NullFloat64
-	value      sql.NullFloat64
+	price      Price
+	value      Price
 }
 
 // IAsset defines an asset interface.
@@ -23,9 +26,9 @@ type Asset struct {
 type IAsset interface {
 	GetTicker() string
 	GetMultiplier() float64
-	GetPrice() sql.NullFloat64
-	SetPrice(sql.NullFloat64)
-	GetValue() sql.NullFloat64
+	GetPrice() Price
+	SetPrice(Price)
+	GetValue() Price
 	Revalue()
 }
 
@@ -52,19 +55,19 @@ func (a Asset) GetTicker() string {
 }
 
 // GetPrice returns the asset's price.
-func (a Asset) GetPrice() sql.NullFloat64 {
+func (a Asset) GetPrice() Price {
 	return a.price
 }
 
 // SetPrice sets the asset's price.
 // The Revalue method is automatically called after setting price.
-func (a *Asset) SetPrice(price sql.NullFloat64) {
+func (a *Asset) SetPrice(price Price) {
 	a.price = price
 	a.Revalue()
 }
 
 // GetValue returns the asset's valud.
-func (a Asset) GetValue() sql.NullFloat64 {
+func (a Asset) GetValue() Price {
 	return a.value
 }
 
@@ -77,5 +80,5 @@ func (a *Asset) Revalue() {
 
 	priceFloat := a.price.Float64
 	multiplier := a.GetMultiplier()
-	a.value = sql.NullFloat64{Float64: priceFloat * multiplier, Valid: true}
+	a.value = Price{Float64: priceFloat * multiplier, Valid: true}
 }
