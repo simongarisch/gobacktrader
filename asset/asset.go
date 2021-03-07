@@ -9,7 +9,7 @@ import (
 type Price sql.NullFloat64
 
 var (
-	nullValue         = Price{Float64: 0.0, Valid: false}
+	nullPrice         = Price{Float64: 0.0, Valid: false}
 	defaultMultiplier = 1.0
 )
 
@@ -74,7 +74,7 @@ func (a Asset) GetValue() Price {
 // Revalue revalues our asset.
 func (a *Asset) Revalue() {
 	if !a.price.Valid {
-		a.value = nullValue
+		a.value = nullPrice
 		return
 	}
 
