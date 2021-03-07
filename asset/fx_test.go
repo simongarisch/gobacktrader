@@ -36,3 +36,21 @@ func TestSplitPair(t *testing.T) {
 		t.Error("Unexpected error string")
 	}
 }
+
+func TestIsEquivalentPair(t *testing.T) {
+	isEquivalent, err := IsEquivalentPair("AUDAUD")
+	if err != nil {
+		t.Errorf("Error in IsEquivalentPair - %s", err)
+	}
+	if !isEquivalent {
+		t.Error("AUDAUD should be an equivalent pair")
+	}
+
+	isEquivalent, err = IsEquivalentPair("AUDUSD")
+	if err != nil {
+		t.Errorf("Error in IsEquivalentPair - %s", err)
+	}
+	if isEquivalent {
+		t.Error("AUDUSD should not be an equivalent pair")
+	}
+}

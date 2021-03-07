@@ -28,3 +28,17 @@ func SplitPair(pair string) (string, string, error) {
 	ccy2 = pair[3:]
 	return ccy1, ccy2, nil
 }
+
+// IsEquivalentPair returns true where we expect the rate to be static.
+// For example, AUDUSD = 1.0, USDUSD = 1.0.
+func IsEquivalentPair(pair string) (bool, error) {
+	ccy1, ccy2, err := SplitPair(pair)
+	if err != nil {
+		return false, err
+	}
+
+	if ccy1 == ccy2 {
+		return true, nil
+	}
+	return false, nil
+}
