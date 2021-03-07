@@ -54,3 +54,18 @@ func TestIsEquivalentPair(t *testing.T) {
 		t.Error("AUDUSD should not be an equivalent pair")
 	}
 }
+
+func TestGetInversePair(t *testing.T) {
+	inversePair, err := GetInversePair("AUDUSD")
+	if err != nil {
+		t.Errorf("Error in GetInversePair - %s", err)
+	}
+	if inversePair != "USDAUD" {
+		t.Errorf("inverse pair of 'AUDUSD' is 'USDAUD', got '%s'", inversePair)
+	}
+
+	_, err = GetInversePair("AUDUSDX")
+	if err.Error() != "expecting a six character currency pair, got 'AUDUSDX'" {
+		t.Error("Unexpected error string")
+	}
+}

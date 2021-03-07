@@ -42,3 +42,13 @@ func IsEquivalentPair(pair string) (bool, error) {
 	}
 	return false, nil
 }
+
+// GetInversePair returns the inverse of some currency pair
+func GetInversePair(pair string) (string, error) {
+	ccy1, ccy2, err := SplitPair(pair)
+	if err != nil {
+		return "", err
+	}
+
+	return ccy2 + ccy1, nil
+}
