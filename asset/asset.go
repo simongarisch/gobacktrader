@@ -3,6 +3,7 @@ package asset
 
 import (
 	"database/sql"
+	"gobacktrader/btutil"
 )
 
 // Price is the unit of measurement for asset price and value.
@@ -35,12 +36,14 @@ type IAsset interface {
 // NewAsset creates a new asset instance with a
 // default multiplier.
 func NewAsset(ticker string) Asset {
+	ticker = btutil.CleanString(ticker)
 	return Asset{ticker: ticker, multiplier: defaultMultiplier}
 }
 
 // NewAssetWithMultiplier create a new asset with
 // a non-default multiplier.
 func NewAssetWithMultiplier(ticker string, multiplier float64) Asset {
+	ticker = btutil.CleanString(ticker)
 	return Asset{ticker: ticker, multiplier: multiplier}
 }
 

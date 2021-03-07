@@ -5,7 +5,7 @@ import (
 )
 
 func TestNewAsset(t *testing.T) {
-	asset := NewAsset("ZZB AU")
+	asset := NewAsset("zzb au")
 	if asset.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker")
 	}
