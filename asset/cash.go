@@ -12,11 +12,6 @@ type Cash struct {
 	currency string
 }
 
-// GetCurrency returns the cash currency
-func (c Cash) GetCurrency() string {
-	return c.currency
-}
-
 // NewCash returns a new cash asset.
 func NewCash(currency string) (Cash, error) {
 	currency = btutil.CleanString(currency)
@@ -26,6 +21,16 @@ func NewCash(currency string) (Cash, error) {
 	}
 
 	return cash, nil
+}
+
+// GetCurrency returns the cash currency.
+func (c Cash) GetCurrency() string {
+	return c.currency
+}
+
+// GetTicker returns the cash ticker.
+func (c Cash) GetTicker() string {
+	return c.currency
 }
 
 // GetPrice returns the price for our cash asset.
