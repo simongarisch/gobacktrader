@@ -1,6 +1,9 @@
 package asset
 
-import "testing"
+import (
+	"gobacktrader/btutil"
+	"testing"
+)
 
 func TestValidatePair(t *testing.T) {
 	// start with a valid pair
@@ -67,5 +70,84 @@ func TestGetInversePair(t *testing.T) {
 	_, err = GetInversePair("AUDUSDX")
 	if err.Error() != "expecting a six character currency pair, got 'AUDUSDX'" {
 		t.Error("Unexpected error string")
+	}
+}
+
+func TestFxRate(t *testing.T) {
+	price := Price{Float64: 0.75, Valid: true}
+	fxrate := NewFxRate("audusd", price)
+
+	pair := fxrate.GetPair()
+	if pair != "AUDUSD" {
+		t.Errorf("Unexpected pair: wanted 'AUDUSD', got '%s'", pair)
+	}
+
+	rate := fxrate.GetRate()
+	if rate.Float64 != 0.75 {
+		t.Errorf("Unexpected rate: wanted 0.75, got %0.2f", rate.Float64)
+	}
+
+	price = Price{Float64: 0.8, Valid: true}
+	fxrate.SetRate(price)
+	rate = fxrate.GetRate()
+	if rate.Float64 != 0.8 {
+		t.Errorf("Unexpected rate: wanted 0.8, got %0.2f", rate.Float64)
+	}
+}
+
+func TestFxRates(t *testing.T) {
+	fxRates := FxRates{}
+
+	price := Price{Float64: 0.75, Valid: true}
+	audusd := NewFxRate("AUDUSD", price)
+	err := fxRates.Register(&audusd)
+	if err != nil {
+		t.Errorf("Error in fxRates.Register - %s", err)
+	}
+
+	// check the AUDUSD rate
+	rate, err := fxRates.GetRate("AUDUSD")
+	if err != nil {
+		t.Errorf("Error in GetRate - %s", err)
+	}
+	if rate != 0.75 {
+		t.Errorf("Unexpected FX rate: wanted 0.75, got %0.4f", rate)
+	}
+
+	// the inverse rate of USDAUD
+	rate, err = fxRates.GetRate("USDAUD")
+	if err != nil {
+		t.Errorf("Error in GetRate - %s", err)
+	}
+
+	actualRate := btutil.Round4dp(rate)
+	expectedRate := btutil.Round4dp(1 / 0.75)
+	if actualRate != expectedRate {
+		t.Errorf("Unexpected inverse FX rate: wanted %0.4f, got %0.4f", expectedRate, actualRate)
+	}
+}
+
+func TestFxRatesEmpty(t *testing.T) {
+	fxRates := FxRates{}
+	_, err := fxRates.GetRate("AUDUSD")
+	if err.Error() != "'AUDUSD' FX rate not found" {
+		t.Error("Unexpected error message. AUDUSD rate shouldn't exist.")
+	}
+}
+
+func TestFxRatesRegistering(t *testing.T) {
+	fxRates := FxRates{}
+	xxxyyy := NewFxRate("XXXYYY", Price{Float64: 0.5, Valid: true})
+	yyyxxx := NewFxRate("YYYXXX", Price{Float64: 2.0, Valid: true})
+
+	var err error
+	err = fxRates.Register(&xxxyyy)
+	if err != nil {
+		t.Errorf("Error in fxRates.Register - %s", err)
+	}
+
+	err = fxRates.Register(&yyyxxx) // we already implicitly have this rate
+	if err.Error() != "'YYYXXX' fx rate instance already exists" {
+		t.Error("Unexpected error when registering inverse rate.")
 	}
 }
