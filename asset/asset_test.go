@@ -5,9 +5,12 @@ import (
 )
 
 func TestNewAsset(t *testing.T) {
-	asset := NewAsset("zzb au")
+	asset := NewAsset("zzb au", "AUD")
 	if asset.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker")
+	}
+	if asset.GetBaseCurrency() != "AUD" {
+		t.Error("Unexpected base currency")
 	}
 	if asset.GetPrice().Valid {
 		t.Error("Expecting an uninitialised price")
@@ -20,7 +23,7 @@ func TestNewAsset(t *testing.T) {
 }
 
 func TestNewAssetWithMultiplier(t *testing.T) {
-	asset := NewAssetWithMultiplier("ZZB AU", 100.0)
+	asset := NewAssetWithMultiplier("ZZB AU", "AUD", 100.0)
 	if asset.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker")
 	}
@@ -33,7 +36,7 @@ func TestNewAssetWithMultiplier(t *testing.T) {
 }
 
 func TestGetSetPrice(t *testing.T) {
-	asset := NewAsset("ZZB AU")
+	asset := NewAsset("ZZB AU", "AUD")
 	priceFloat := 2.75
 	price := Price{Float64: priceFloat, Valid: true}
 	asset.SetPrice(price)
@@ -45,7 +48,7 @@ func TestGetSetPrice(t *testing.T) {
 }
 
 func TestRevalue(t *testing.T) {
-	asset := NewAssetWithMultiplier("ZZB AU", 100.0)
+	asset := NewAssetWithMultiplier("ZZB AU", "AUD", 100.0)
 	price := Price{Float64: 2.0, Valid: true}
 	asset.SetPrice(price)
 

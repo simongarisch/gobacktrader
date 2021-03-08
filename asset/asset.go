@@ -16,16 +16,17 @@ var (
 
 // Asset defines a generic asset type with a ticker, price and value.
 type Asset struct {
-	ticker     string
-	multiplier float64
-	price      Price
-	value      Price
+	ticker       string
+	baseCurrency string
+	multiplier   float64
+	price        Price
+	value        Price
 }
 
 // IAsset defines an asset interface.
-// All assets must have a Revalue method
 type IAsset interface {
 	GetTicker() string
+	GetBaseCurrency() string
 	GetMultiplier() float64
 	GetPrice() Price
 	SetPrice(Price)
@@ -35,26 +36,39 @@ type IAsset interface {
 
 // NewAsset creates a new asset instance with a
 // default multiplier.
-func NewAsset(ticker string) Asset {
+func NewAsset(ticker string, baseCurrency string) Asset {
 	ticker = btutil.CleanString(ticker)
-	return Asset{ticker: ticker, multiplier: defaultMultiplier}
+	return Asset{
+		ticker:       ticker,
+		baseCurrency: baseCurrency,
+		multiplier:   defaultMultiplier,
+	}
 }
 
 // NewAssetWithMultiplier create a new asset with
 // a non-default multiplier.
-func NewAssetWithMultiplier(ticker string, multiplier float64) Asset {
+func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float64) Asset {
 	ticker = btutil.CleanString(ticker)
-	return Asset{ticker: ticker, multiplier: multiplier}
-}
-
-// GetMultiplier returns the asset's multiplier
-func (a Asset) GetMultiplier() float64 {
-	return a.multiplier
+	return Asset{
+		ticker:       ticker,
+		baseCurrency: baseCurrency,
+		multiplier:   multiplier,
+	}
 }
 
 // GetTicker returns the asset's ticker code.
 func (a Asset) GetTicker() string {
 	return a.ticker
+}
+
+// GetBaseCurrency returns the asset's base currency code.
+func (a Asset) GetBaseCurrency() string {
+	return a.baseCurrency
+}
+
+// GetMultiplier returns the asset's multiplier
+func (a Asset) GetMultiplier() float64 {
+	return a.multiplier
 }
 
 // GetPrice returns the asset's price.

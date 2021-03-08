@@ -5,9 +5,12 @@ import (
 )
 
 func TestNewStock(t *testing.T) {
-	stock := NewStock("ZZB AU")
+	stock := NewStock("ZZB AU", "AUD")
 	if stock.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker")
+	}
+	if stock.GetBaseCurrency() != "AUD" {
+		t.Error("Unexpected base currency")
 	}
 
 	priceFloat := 2.0
