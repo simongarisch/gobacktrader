@@ -83,7 +83,7 @@ func (a *Asset) SetPrice(price Price) {
 	a.Revalue()
 }
 
-// GetValue returns the asset's valud.
+// GetValue returns the asset's value.
 func (a Asset) GetValue() Price {
 	return a.value
 }
