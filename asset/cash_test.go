@@ -10,7 +10,10 @@ func TestNewCash(t *testing.T) {
 		t.Errorf("Error in NewCash - %s", err)
 	}
 	if cash.GetCurrency() != "USD" {
-		t.Errorf("Expected a '%s' currency code.", currency)
+		t.Error("Expected a 'USD' currency code.")
+	}
+	if cash.GetBaseCurrency() != "USD" {
+		t.Error("Expected a 'USD' base currency code")
 	}
 
 	// and an invalid currency

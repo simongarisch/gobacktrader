@@ -37,3 +37,8 @@ func (c Cash) GetPrice() Price {
 func (c Cash) GetValue() Price {
 	return unitPrice
 }
+
+// GetBaseCurrency returns the base currency code.
+func (c Cash) GetBaseCurrency() string {
+	return c.currency
+}
