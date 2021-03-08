@@ -151,3 +151,33 @@ func TestFxRatesRegistering(t *testing.T) {
 		t.Error("Unexpected error when registering inverse rate.")
 	}
 }
+
+func TestFxRateChanges(t *testing.T) {
+	fxRates := FxRates{}
+	startRate, endRate := 0.75, 0.80
+	audusd := NewFxRate("AUDUSD", Price{Float64: startRate, Valid: true})
+
+	err := fxRates.Register(&audusd)
+	if err != nil {
+		t.Errorf("Error in fxRates.Register - %s", err)
+	}
+
+	// check the starting rate
+	rate, err := fxRates.GetRate("AUDUSD")
+	if err != nil {
+		t.Errorf("Error in GetRate - %s", err)
+	}
+	if rate != startRate {
+		t.Errorf("Unexpected FX rate: wanted %0.4f, got %0.4f", startRate, rate)
+	}
+
+	audusd.SetRate(Price{Float64: endRate, Valid: true})
+	// check the ending rate
+	rate, err = fxRates.GetRate("AUDUSD")
+	if err != nil {
+		t.Errorf("Error in GetRate - %s", err)
+	}
+	if rate != endRate {
+		t.Errorf("Unexpected FX rate: wanted %0.4f, got %0.4f", endRate, rate)
+	}
+}
