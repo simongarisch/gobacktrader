@@ -34,6 +34,11 @@ type IAsset interface {
 	Revalue()
 }
 
+type iAssetValue interface {
+	GetValue() Price
+	GetBaseCurrency() string
+}
+
 // NewAsset creates a new asset instance with a
 // default multiplier.
 func NewAsset(ticker string, baseCurrency string) Asset {
