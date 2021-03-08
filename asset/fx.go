@@ -88,7 +88,7 @@ type FxRates struct {
 }
 
 // Register adds an FXRate to the available FxRates.
-// We cannot register a pair or it's inverse more than once.
+// We cannot register a pair or its inverse more than once.
 // If we have an FX pair then we implicitly have its inverse
 // e.g. USDAUD = 1.0 / AUDUSD.
 func (fxRates *FxRates) Register(rate *FxRate) error {
