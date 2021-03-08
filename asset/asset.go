@@ -35,8 +35,9 @@ type IAsset interface {
 }
 
 type iAssetValue interface {
-	GetValue() Price
+	GetTicker() string
 	GetBaseCurrency() string
+	GetValue() Price
 }
 
 // NewAsset creates a new asset instance with a
