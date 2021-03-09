@@ -5,6 +5,26 @@ import (
 	"testing"
 )
 
+func TestValidateCurrency(t *testing.T) {
+	// first look at a valid currency code
+	ccy, err := ValidateCurrency(" usd ")
+	if ccy != "USD" {
+		t.Errorf("Expecting currency 'USD', got '%s'", ccy)
+	}
+	if err != nil {
+		t.Errorf("Unexpected error in ValidateCurrency - %s", err)
+	}
+
+	// then an invalid code
+	_, err = ValidateCurrency("usda")
+	if err == nil {
+		t.Error("Expecting an error for invalid currency 'USDA'")
+	}
+	if err.Error() != "'USDA' is not a valid currency code" {
+		t.Error("Unexpected error message string.")
+	}
+}
+
 func TestValidatePair(t *testing.T) {
 	// start with a valid pair
 	pair, err := ValidatePair(" audusd ")

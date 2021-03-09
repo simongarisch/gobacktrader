@@ -5,6 +5,16 @@ import (
 	"gobacktrader/btutil"
 )
 
+// ValidateCurrency takes a currency code and returns
+// a cleaned code along with an error if invalid.
+func ValidateCurrency(ccy string) (string, error) {
+	ccy = btutil.CleanString(ccy)
+	if len(ccy) != 3 {
+		return ccy, fmt.Errorf("'%s' is not a valid currency code", ccy)
+	}
+	return ccy, nil
+}
+
 // ValidatePair takes a currency pair and returns a
 // cleaned pair string along with an error if invalid.
 func ValidatePair(pair string) (string, error) {
