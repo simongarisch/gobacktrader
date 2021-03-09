@@ -23,18 +23,9 @@ type Asset struct {
 	value        Price
 }
 
-// IAsset defines an asset interface.
-type IAsset interface {
-	GetTicker() string
-	GetBaseCurrency() string
-	GetMultiplier() float64
-	GetPrice() Price
-	SetPrice(Price)
-	GetValue() Price
-	Revalue()
-}
-
 // IAssetReadOnly defines the interface for read only assets.
+// Given these interface methods take a pointer receiver only
+// pointers to asset can satisfy this interface.
 type IAssetReadOnly interface {
 	GetTicker() string
 	GetBaseCurrency() string
@@ -64,22 +55,22 @@ func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float
 }
 
 // GetTicker returns the asset's ticker code.
-func (a Asset) GetTicker() string {
+func (a *Asset) GetTicker() string {
 	return a.ticker
 }
 
 // GetBaseCurrency returns the asset's base currency code.
-func (a Asset) GetBaseCurrency() string {
+func (a *Asset) GetBaseCurrency() string {
 	return a.baseCurrency
 }
 
 // GetMultiplier returns the asset's multiplier
-func (a Asset) GetMultiplier() float64 {
+func (a *Asset) GetMultiplier() float64 {
 	return a.multiplier
 }
 
 // GetPrice returns the asset's price.
-func (a Asset) GetPrice() Price {
+func (a *Asset) GetPrice() Price {
 	return a.price
 }
 
@@ -91,7 +82,7 @@ func (a *Asset) SetPrice(price Price) {
 }
 
 // GetValue returns the asset's value.
-func (a Asset) GetValue() Price {
+func (a *Asset) GetValue() Price {
 	return a.value
 }
 
