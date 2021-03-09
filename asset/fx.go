@@ -121,6 +121,15 @@ func (fxRates *FxRates) Register(rate *FxRate) error {
 
 // GetRate returns an FX rate from our FX instances.
 func (fxRates *FxRates) GetRate(pair string) (float64, error) {
+	isEquivalentPair, err := IsEquivalentPair(pair)
+	if err != nil {
+		return 0.0, err
+	}
+
+	if isEquivalentPair { // e.g. AUDAUD, USDUSD, GBPGBP
+		return 1.0, nil
+	}
+
 	pair = btutil.CleanString(pair)
 	inversePair, err := GetInversePair(pair)
 	if err != nil {
@@ -133,6 +142,9 @@ func (fxRates *FxRates) GetRate(pair string) (float64, error) {
 		if registeredPair == pair {
 			rate := fxRate.GetRate()
 			if rate.Valid {
+				if rate.Float64 == 0.0 {
+					return 0.0, fmt.Errorf("'%s' FX rate is zero", pair)
+				}
 				return rate.Float64, nil
 			}
 		}

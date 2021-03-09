@@ -172,6 +172,20 @@ func TestFxRatesRegistering(t *testing.T) {
 	}
 }
 
+func TestFxRatesEquivalentPairs(t *testing.T) {
+	fxRates := FxRates{}
+	equivalentPairs := []string{"AUDAUD", "USDUSD", "GBPGBP"}
+	for _, pair := range equivalentPairs {
+		rate, err := fxRates.GetRate(pair)
+		if err != nil {
+			t.Errorf("Error in GetRate - %s", err)
+		}
+		if rate != 1.0 {
+			t.Errorf("Expecting an FX rate of 1.0 for '%s'", pair)
+		}
+	}
+}
+
 func TestFxRateChanges(t *testing.T) {
 	fxRates := FxRates{}
 	startRate, endRate := 0.75, 0.80
