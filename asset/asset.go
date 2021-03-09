@@ -34,7 +34,8 @@ type IAsset interface {
 	Revalue()
 }
 
-type iAssetValue interface {
+// IAssetReadOnly defines the interface for read only assets.
+type IAssetReadOnly interface {
 	GetTicker() string
 	GetBaseCurrency() string
 	GetValue() Price

@@ -14,7 +14,7 @@ func TestNewPosition(t *testing.T) {
 	if position.GetUnits() != 100.0 {
 		t.Error("Unexpected units.")
 	}
-	if position.getAsset() != &asset {
+	if position.GetAsset() != &asset {
 		t.Error("Unexpected asset")
 	}
 }

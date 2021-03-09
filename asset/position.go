@@ -2,12 +2,12 @@ package asset
 
 // Position represents a holding in some asset.
 type Position struct {
-	asset iAssetValue
+	asset IAssetReadOnly
 	units float64
 }
 
 // NewPosition creates a new asset position.
-func NewPosition(asset iAssetValue, units float64) Position {
+func NewPosition(asset IAssetReadOnly, units float64) Position {
 	return Position{asset: asset, units: units}
 }
 
@@ -27,7 +27,7 @@ func (p Position) GetUnits() float64 {
 }
 
 // GetAsset returns the position asset.
-func (p *Position) getAsset() iAssetValue {
+func (p *Position) GetAsset() IAssetReadOnly {
 	return p.asset
 }
 
