@@ -34,24 +34,28 @@ type IAssetReadOnly interface {
 
 // NewAsset creates a new asset instance with a
 // default multiplier.
-func NewAsset(ticker string, baseCurrency string) Asset {
+func NewAsset(ticker string, baseCurrency string) (Asset, error) {
 	ticker = btutil.CleanString(ticker)
-	return Asset{
+	baseCurrency, err := ValidateCurrency(baseCurrency)
+	asset := Asset{
 		ticker:       ticker,
 		baseCurrency: baseCurrency,
 		multiplier:   defaultMultiplier,
 	}
+	return asset, err
 }
 
 // NewAssetWithMultiplier create a new asset with
 // a non-default multiplier.
-func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float64) Asset {
+func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float64) (Asset, error) {
 	ticker = btutil.CleanString(ticker)
-	return Asset{
+	baseCurrency, err := ValidateCurrency(baseCurrency)
+	asset := Asset{
 		ticker:       ticker,
 		baseCurrency: baseCurrency,
 		multiplier:   multiplier,
 	}
+	return asset, err
 }
 
 // GetTicker returns the asset's ticker code.

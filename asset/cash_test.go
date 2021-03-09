@@ -20,7 +20,7 @@ func TestNewCash(t *testing.T) {
 	currency = "usda"
 	_, err = NewCash(currency)
 	errstr := err.Error()
-	if errstr != "'USDA' is an invalid currency code" {
+	if errstr != "'USDA' is not a valid currency code" {
 		t.Error("Unexpected error string.")
 	}
 }

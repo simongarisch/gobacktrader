@@ -3,7 +3,10 @@ package asset
 import "testing"
 
 func TestNewPosition(t *testing.T) {
-	asset := NewStock("ZZB AU", "AUD")
+	asset, err := NewStock("ZZB AU", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewStock - %s", err)
+	}
 	position := NewPosition(&asset, 100.0)
 	if position.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker.")
@@ -20,7 +23,10 @@ func TestNewPosition(t *testing.T) {
 }
 
 func TestPositionValue(t *testing.T) {
-	stock := NewStock("ZZB AU", "AUD")
+	stock, err := NewStock("ZZB AU", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewStock - %s", err)
+	}
 	position := NewPosition(&stock, 100.0)
 
 	if position.GetUnits() != 100.0 {

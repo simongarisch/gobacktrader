@@ -1,10 +1,5 @@
 package asset
 
-import (
-	"fmt"
-	"gobacktrader/btutil"
-)
-
 var unitPrice = Price{Float64: 1.0, Valid: true}
 
 // Cash represents a cash asset.
@@ -14,13 +9,9 @@ type Cash struct {
 
 // NewCash returns a new cash asset.
 func NewCash(currency string) (Cash, error) {
-	currency = btutil.CleanString(currency)
+	currency, err := ValidateCurrency(currency)
 	cash := Cash{currency: currency}
-	if len(currency) != 3 {
-		return cash, fmt.Errorf("'%s' is an invalid currency code", currency)
-	}
-
-	return cash, nil
+	return cash, err
 }
 
 // GetCurrency returns the cash currency.

@@ -5,7 +5,10 @@ import (
 )
 
 func TestNewStock(t *testing.T) {
-	stock := NewStock("ZZB AU", "AUD")
+	stock, err := NewStock("ZZB AU", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewStock - %s", err)
+	}
 	if stock.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker")
 	}

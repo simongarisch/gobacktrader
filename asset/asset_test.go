@@ -5,7 +5,10 @@ import (
 )
 
 func TestNewAsset(t *testing.T) {
-	asset := NewAsset("zzb au", "AUD")
+	asset, err := NewAsset("zzb au", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewAsset - %s", err)
+	}
 	if asset.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker")
 	}
@@ -23,7 +26,10 @@ func TestNewAsset(t *testing.T) {
 }
 
 func TestNewAssetWithMultiplier(t *testing.T) {
-	asset := NewAssetWithMultiplier("ZZB AU", "AUD", 100.0)
+	asset, err := NewAssetWithMultiplier("ZZB AU", "AUD", 100.0)
+	if err != nil {
+		t.Errorf("Error in NewAssetWithMultiplier - %s", err)
+	}
 	if asset.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker")
 	}
@@ -36,7 +42,10 @@ func TestNewAssetWithMultiplier(t *testing.T) {
 }
 
 func TestGetSetPrice(t *testing.T) {
-	asset := NewAsset("ZZB AU", "AUD")
+	asset, err := NewAsset("ZZB AU", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewAsset - %s", err)
+	}
 	priceFloat := 2.75
 	price := Price{Float64: priceFloat, Valid: true}
 	asset.SetPrice(price)
@@ -48,7 +57,10 @@ func TestGetSetPrice(t *testing.T) {
 }
 
 func TestRevalue(t *testing.T) {
-	asset := NewAssetWithMultiplier("ZZB AU", "AUD", 100.0)
+	asset, err := NewAssetWithMultiplier("ZZB AU", "AUD", 100.0)
+	if err != nil {
+		t.Errorf("Error in NewAssetWithMultiplier - %s", err)
+	}
 	price := Price{Float64: 2.0, Valid: true}
 	asset.SetPrice(price)
 
