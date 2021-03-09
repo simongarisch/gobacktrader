@@ -126,18 +126,24 @@ func TestFxRates(t *testing.T) {
 	}
 
 	// check the AUDUSD rate
-	rate, err := fxRates.GetRate("AUDUSD")
+	rate, ok, err := fxRates.GetRate("AUDUSD")
 	if err != nil {
 		t.Errorf("Error in GetRate - %s", err)
+	}
+	if !ok {
+		t.Error("'AUDUSD' rate should be available")
 	}
 	if rate != 0.75 {
 		t.Errorf("Unexpected FX rate: wanted 0.75, got %0.4f", rate)
 	}
 
 	// the inverse rate of USDAUD
-	rate, err = fxRates.GetRate("USDAUD")
+	rate, ok, err = fxRates.GetRate("USDAUD")
 	if err != nil {
 		t.Errorf("Error in GetRate - %s", err)
+	}
+	if !ok {
+		t.Error("'USDAUD' rate should be available.")
 	}
 
 	actualRate := btutil.Round4dp(rate)
@@ -149,9 +155,12 @@ func TestFxRates(t *testing.T) {
 
 func TestFxRatesEmpty(t *testing.T) {
 	fxRates := FxRates{}
-	_, err := fxRates.GetRate("AUDUSD")
-	if err.Error() != "'AUDUSD' FX rate not found" {
-		t.Error("Unexpected error message. AUDUSD rate shouldn't exist.")
+	_, ok, err := fxRates.GetRate("AUDUSD")
+	if ok {
+		t.Error("'AUDUSD' rate shouldn't be available.")
+	}
+	if err != nil {
+		t.Errorf("Error in GetRate - %s", err)
 	}
 }
 
@@ -176,9 +185,12 @@ func TestFxRatesEquivalentPairs(t *testing.T) {
 	fxRates := FxRates{}
 	equivalentPairs := []string{"AUDAUD", "USDUSD", "GBPGBP"}
 	for _, pair := range equivalentPairs {
-		rate, err := fxRates.GetRate(pair)
+		rate, ok, err := fxRates.GetRate(pair)
 		if err != nil {
 			t.Errorf("Error in GetRate - %s", err)
+		}
+		if !ok {
+			t.Errorf("'%s' should have an available rate.", pair)
 		}
 		if rate != 1.0 {
 			t.Errorf("Expecting an FX rate of 1.0 for '%s'", pair)
@@ -197,9 +209,12 @@ func TestFxRateChanges(t *testing.T) {
 	}
 
 	// check the starting rate
-	rate, err := fxRates.GetRate("AUDUSD")
+	rate, ok, err := fxRates.GetRate("AUDUSD")
 	if err != nil {
 		t.Errorf("Error in GetRate - %s", err)
+	}
+	if !ok {
+		t.Error("'AUDUSD' should be an available rate")
 	}
 	if rate != startRate {
 		t.Errorf("Unexpected FX rate: wanted %0.4f, got %0.4f", startRate, rate)
@@ -207,9 +222,12 @@ func TestFxRateChanges(t *testing.T) {
 
 	audusd.SetRate(Price{Float64: endRate, Valid: true})
 	// check the ending rate
-	rate, err = fxRates.GetRate("AUDUSD")
+	rate, ok, err = fxRates.GetRate("AUDUSD")
 	if err != nil {
 		t.Errorf("Error in GetRate - %s", err)
+	}
+	if !ok {
+		t.Error("'AUDUSD' should be an available rate")
 	}
 	if rate != endRate {
 		t.Errorf("Unexpected FX rate: wanted %0.4f, got %0.4f", endRate, rate)

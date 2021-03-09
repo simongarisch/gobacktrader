@@ -119,21 +119,22 @@ func (fxRates *FxRates) Register(rate *FxRate) error {
 	return nil
 }
 
-// GetRate returns an FX rate from our FX instances.
-func (fxRates *FxRates) GetRate(pair string) (float64, error) {
+// GetRate returns three items: an FX rate, a boolean value to show whether
+// this is rate is available and an error.
+func (fxRates *FxRates) GetRate(pair string) (float64, bool, error) {
 	isEquivalentPair, err := IsEquivalentPair(pair)
 	if err != nil {
-		return 0.0, err
+		return 0.0, false, err
 	}
 
 	if isEquivalentPair { // e.g. AUDAUD, USDUSD, GBPGBP
-		return 1.0, nil
+		return 1.0, true, nil
 	}
 
 	pair = btutil.CleanString(pair)
 	inversePair, err := GetInversePair(pair)
 	if err != nil {
-		return 0.0, err
+		return 0.0, false, err
 	}
 
 	for _, fxRate := range fxRates.rates {
@@ -143,9 +144,9 @@ func (fxRates *FxRates) GetRate(pair string) (float64, error) {
 			rate := fxRate.GetRate()
 			if rate.Valid {
 				if rate.Float64 == 0.0 {
-					return 0.0, fmt.Errorf("'%s' FX rate is zero", pair)
+					return 0.0, false, fmt.Errorf("'%s' FX rate is zero", pair)
 				}
-				return rate.Float64, nil
+				return rate.Float64, true, nil
 			}
 		}
 
@@ -154,12 +155,12 @@ func (fxRates *FxRates) GetRate(pair string) (float64, error) {
 			rate := fxRate.GetRate()
 			if rate.Valid {
 				if rate.Float64 == 0.0 {
-					return 0.0, fmt.Errorf("'%s' FX rate is zero", pair)
+					return 0.0, false, fmt.Errorf("'%s' FX rate is zero", pair)
 				}
-				return 1 / rate.Float64, nil
+				return 1 / rate.Float64, true, nil
 			}
 		}
 	}
 
-	return 0.0, fmt.Errorf("'%s' FX rate not found", pair)
+	return 0.0, false, nil
 }
