@@ -1,6 +1,6 @@
 package asset
 
-// Portfolio consists of a connection of positions.
+// Portfolio consists of a collection of positions.
 type Portfolio struct {
 	code         string
 	baseCurrency string
