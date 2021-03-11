@@ -1,6 +1,10 @@
 package events
 
-import "time"
+import (
+	"errors"
+	"sort"
+	"time"
+)
 
 // IEvent defines the interface for event objects.
 type IEvent interface {
@@ -11,54 +15,67 @@ type IEvent interface {
 
 // Events represents a collection of events.
 type Events struct {
-	times    []time.Time
-	eventMap map[time.Time][]IEvent
+	list []IEvent
 }
 
 // NewEvents returns a new empty events collection.
 func NewEvents() Events {
-	eventMap := make(map[time.Time][]IEvent)
-	return Events{eventMap: eventMap}
+	return Events{}
 }
 
 // Len returns the number of event dates.
 func (e Events) Len() int {
-	return len(e.eventMap)
+	return len(e.list)
+}
+
+// IsEmpty returns true if the events list is empty.
+func (e Events) IsEmpty() bool {
+	if len(e.list) == 0 {
+		return true
+	}
+	return false
 }
 
 // Add will add an event to the events collection.
 func (e *Events) Add(event IEvent) {
+	if e.Contains(event) {
+		return // event is already in the list
+	}
+	e.list = insertSort(e.list, event)
+}
+
+// Get will return the most recent event.
+func (e *Events) Get() (IEvent, error) {
+	if e.IsEmpty() {
+		return nil, errors.New("the events list is empty")
+	}
+	event := e.list[0]
+	e.list = e.list[1:]
+	return event, nil
+}
+
+// FetchAll returns all events from the list.
+func (e *Events) FetchAll() []IEvent {
+	list := e.list
+	e.list = nil
+	return list
+}
+
+// Contains returns true if some event is in the list, false otherwise
+func (e Events) Contains(event IEvent) bool {
+	for _, listEvent := range e.list {
+		if listEvent == event {
+			return true
+		}
+	}
+	return false
+}
+
+func insertSort(events []IEvent, event IEvent) []IEvent {
 	eventTime := event.GetTime()
-	if _, ok := e.eventMap[eventTime]; ok {
-		for _, existingEvent := range e.eventMap[eventTime] {
-			if existingEvent == event {
-				return // don't add the same event twice
-			}
-		}
-		e.eventMap[eventTime] = append(e.eventMap[eventTime], event)
-	} else {
-		e.eventMap[eventTime] = []IEvent{event}
-		e.addTime(eventTime)
-	}
-}
-
-// GetEventsForTime returns all the events for a given time
-// and deletes them from the events collection
-func (e *Events) GetEventsForTime(t time.Time) []IEvent {
-	eventList, ok := e.eventMap[t]
-	if ok {
-		delete(e.eventMap, t)
-	}
-	return eventList
-}
-
-func (e *Events) addTime(eventTime time.Time) {
-	targetIndex := 0
-	for _, currentTime := range e.times {
-		if currentTime.After(eventTime) {
-			break
-		}
-		targetIndex++
-	}
-	//e.times = append(e.times[:targetIndex], eventTime, e.times[targetIndex:]...)
+	index := sort.Search(len(events), func(i int) bool { return events[i].GetTime().After(eventTime) })
+	events = append(events, event)
+	copy(events[index+1:], events[index:])
+	events[index] = event
+	return events
 }

@@ -51,8 +51,53 @@ func TestEventsLen(t *testing.T) {
 		t.Errorf("Expecting an events.Len of 2, got %d", events.Len())
 	}
 
-	events.GetEventsForTime(eventTime1)
+	events.Get()
 	if events.Len() != 1 {
 		t.Errorf("Expecting an events.Len of 1, got %d", events.Len())
+	}
+}
+
+func TestEventsAddGet(t *testing.T) {
+	events := NewEvents()
+	time1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
+	time2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
+	time3 := time.Date(2020, time.December, 16, 0, 0, 0, 0, time.UTC)
+
+	event1 := newTestEvent(time1)
+	event2 := newTestEvent(time2)
+	event3 := newTestEvent(time3)
+
+	// add the events
+	events.Add(&event2)
+	if events.Len() != 1 {
+		t.Errorf("Expecting a length of one.")
+	}
+	events.Add(&event3)
+	if events.Len() != 2 {
+		t.Errorf("Expecting a length of two.")
+	}
+	events.Add(&event1)
+	if events.Len() != 3 {
+		t.Errorf("Expecting a length of three.")
+	}
+
+	// and get them back
+	firstEvent, err := events.Get()
+	if err != nil {
+		t.Errorf("Error in events.Get - %s", err)
+	}
+	if !firstEvent.GetTime().Equal(time1) {
+		t.Error("Expecting event1 to be returned")
+	}
+
+	eventsList := events.FetchAll()
+	if len(eventsList) != 2 {
+		t.Error("Expecting two additional events to be returned.")
+	}
+	if !eventsList[0].GetTime().Equal(time2) {
+		t.Error("Expecting event2 to be returned")
+	}
+	if !eventsList[1].GetTime().Equal(time3) {
+		t.Error("Expecting event3 to be returned")
 	}
 }
