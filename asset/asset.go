@@ -32,6 +32,13 @@ type IAssetReadOnly interface {
 	GetValue() Price
 }
 
+// IAssetWriteOnly defines the interface for write only assets.
+// SetPrice takes a pointer receiver so only pointers to asset
+// can satisfy this interface.
+type IAssetWriteOnly interface {
+	SetPrice(price Price)
+}
+
 // NewAsset creates a new asset instance with a
 // default multiplier.
 func NewAsset(ticker string, baseCurrency string) (Asset, error) {
