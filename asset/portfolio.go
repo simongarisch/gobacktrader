@@ -1,5 +1,13 @@
 package asset
 
+import (
+	"database/sql"
+	"fmt"
+)
+
+// Weight represents an asset weight for a given portfolio.
+type Weight sql.NullFloat64
+
 // Portfolio consists of a collection of positions.
 type Portfolio struct {
 	code         string
@@ -38,6 +46,56 @@ func (p *Portfolio) NumPositions() int {
 func (p *Portfolio) HasAsset(a IAssetReadOnly) bool {
 	_, ok := p.positions[a]
 	return ok
+}
+
+// GetUnits returns the units held for a given asset.
+func (p *Portfolio) GetUnits(a IAssetReadOnly) float64 {
+	position, ok := p.positions[a]
+	if !ok {
+		return 0.0
+	}
+	return position.GetUnits()
+}
+
+func (p *Portfolio) GetWeight(a IAssetReadOnly) (Weight, error) {
+	invalidWeight := Weight{Float64: 0.0, Valid: false}
+	position, ok := p.positions[a]
+	if !ok {
+		return Weight{Float64: 0.0, Valid: true}, nil
+	}
+
+	// we need a valid position value to continue
+	positionValue := position.GetValue()
+	if !positionValue.Valid {
+		return invalidWeight, nil
+	}
+
+	// value this position in the portfolio base currency
+	pair := position.GetBaseCurrency() + p.GetBaseCurrency()
+	fxRate, ok, err := p.fxRates.GetRate(pair)
+	if err != nil {
+		return invalidWeight, err
+	}
+	if !ok {
+		return invalidWeight, nil // no valid FX rate initialised.
+	}
+
+	// collect the portfolio value
+	positionBaseCurrencyValue := positionValue.Float64 * fxRate
+	portfolioValue, err := p.GetValue()
+	if err != nil {
+		return invalidWeight, err
+	}
+	if !portfolioValue.Valid {
+		return invalidWeight, nil
+	}
+
+	if portfolioValue.Float64 == 0.0 {
+		return invalidWeight, fmt.Errorf("'%s' unable to collect weights with a zero portfolio value", p.GetCode())
+	}
+
+	weight := positionBaseCurrencyValue / portfolioValue.Float64
+	return Weight{Float64: weight, Valid: true}, nil
 }
 
 // ModifyPositions allows us to increment and decrement positions

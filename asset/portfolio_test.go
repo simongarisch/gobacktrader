@@ -207,3 +207,91 @@ func TestLargerPortfolio(t *testing.T) {
 		t.Errorf("Unexpected portfolio value: wanted %0.2f, got %0.2f", expectedValue, actualValue)
 	}
 }
+
+func TestPortfolioUnitsWeight(t *testing.T) {
+	p := NewPortfolio("XXX", "AUD")
+
+	stock1, err1 := NewStock("ZZA AU", "AUD")
+	stock2, err2 := NewStock("ZZU US", "USD")
+	for _, err := range []error{err1, err2} {
+		if err != nil {
+			t.Errorf("Error in NewStock - %s", err)
+		}
+	}
+
+	aud, err1 := NewCash("AUD")
+	usd, err2 := NewCash("USD")
+	for _, err := range []error{err1, err2} {
+		if err != nil {
+			t.Errorf("Error in NewCash - %s", err)
+		}
+	}
+
+	// add 100 shares of each stock and $100 for each currency
+	p.ModifyPositions(&stock1, 100)
+	p.ModifyPositions(&stock2, 100)
+	p.ModifyPositions(&aud, 100)
+	p.ModifyPositions(&usd, 100)
+
+	stock1.SetPrice(Price{Float64: 1.5, Valid: true})
+	stock2.SetPrice(Price{Float64: 2.5, Valid: true})
+
+	fxRates := FxRates{}
+	audusd := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
+	fxRates.Register(&audusd)
+	p.SetFxRates(&fxRates)
+
+	// this portfolio has a base currency of AUD
+	// stock value = (1.5 * 100) + (2.5 * 100) / 0.75 = 483.3333
+	// cash value = 100 + 100 / 0.75 = 233.3333
+	// total value = AUD 716.6667
+	value, err := p.GetValue()
+	if err != nil {
+		t.Errorf("Error in portfolio.GetValue - %s", err)
+	}
+	if !value.Valid {
+		t.Error("Expecting a valid portfolio value.")
+	}
+
+	actualValue := btutil.Round2dp(value.Float64)
+	expectedValue := 716.67
+	if actualValue != expectedValue {
+		t.Errorf("Unexpected portfolio value: wanted %0.2f, got %0.2f", expectedValue, actualValue)
+	}
+
+	// check the units
+	for _, targetAsset := range []IAssetReadOnly{&stock1, &stock2, &aud, &usd} {
+		if p.GetUnits(targetAsset) != 100 {
+			t.Errorf("'%s': expecting to hold 100 units", targetAsset.GetTicker())
+		}
+	}
+
+	// and the weights
+	// stock1 weight = (1.5 * 100) / 716.6667 = 0.2093
+	// stock2 weight = ((2.5 * 100) / 0.75) / 716.6667 = 0.4651
+	// aud weight = 100 / 716.6667 = 0.1395
+	// usd weight = (100 / 0.75) / 716.6667 = 0.1860
+	// sum of weights = 100%
+	wStock1, err1 := p.GetWeight(&stock1)
+	wStock2, err2 := p.GetWeight(&stock2)
+	wAud, err3 := p.GetWeight(&aud)
+	wUsd, err4 := p.GetWeight(&usd)
+	for _, err := range []error{err1, err2, err3, err4} {
+		if err != nil {
+			t.Errorf("Error in portfolio.GetWeight - %s", err)
+		}
+	}
+
+	if btutil.Round4dp(wStock1.Float64) != 0.2093 {
+		t.Errorf("'%s' expecting a portfolio weight of 0.2093, got %0.4f", stock1.GetTicker(), wStock1.Float64)
+	}
+	if btutil.Round4dp(wStock2.Float64) != 0.4651 {
+		t.Errorf("'%s' expecting a portfolio weight of 0.4651, got %0.4f", stock2.GetTicker(), wStock2.Float64)
+	}
+	if btutil.Round4dp(wAud.Float64) != 0.1395 {
+		t.Errorf("'%s' expecting a portfolio weight of 0.4651, got %0.4f", aud.GetTicker(), wAud.Float64)
+	}
+	if btutil.Round4dp(wUsd.Float64) != 0.1860 {
+		t.Errorf("'%s' expecting a portfolio weight of 0.1860, got %0.4f", usd.GetTicker(), wUsd.Float64)
+	}
+}
