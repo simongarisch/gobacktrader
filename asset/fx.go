@@ -90,6 +90,11 @@ func (r *FxRate) SetRate(rate Price) {
 	r.rate = rate
 }
 
+// SetPrice does the same as SetRate and sets the rate for this pair.
+func (r *FxRate) SetPrice(rate Price) {
+	r.SetRate(rate)
+}
+
 // FxRates keeps track of FXRate instances.
 // There should only ever be one instance of a pair
 // (or its inverse) that is registered.
