@@ -88,9 +88,9 @@ func TestAssetHistory(t *testing.T) {
 	price2 := Price{Float64: 3.0, Valid: true}
 
 	stock.SetPrice(price1)
-	stock.TakeSnapshot(time1)
+	stock.TakeSnapshot(time1, &stock)
 	stock.SetPrice(price2)
-	stock.TakeSnapshot(time2)
+	stock.TakeSnapshot(time2, &stock)
 
 	history := stock.GetHistory()
 	
@@ -102,9 +102,6 @@ func TestAssetHistory(t *testing.T) {
 	if snap1.GetPrice().Float64 != 2.5 {
 		t.Error("snap1 - unexpected price.")
 	}
-	if snap1.GetValue().Float64 != 2.5 {
-		t.Error("snap1 - unexpected value.")
-	}
 
 	// and our second snapshot
 	snap2 := history[time2]
@@ -113,8 +110,5 @@ func TestAssetHistory(t *testing.T) {
 	}
 	if snap2.GetPrice().Float64 != 3.0 {
 		t.Error("snap2 - unexpected price.")
-	}
-	if snap2.GetValue().Float64 != 3.0 {
-		t.Error("snap2 - unexpected value.")
 	}
 }

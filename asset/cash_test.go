@@ -1,6 +1,9 @@
 package asset
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestNewCash(t *testing.T) {
 	// start with a vaid currency
@@ -46,5 +49,37 @@ func TestPriceValue(t *testing.T) {
 	}
 	if value.Float64 != 1.0 {
 		t.Error("Valud should be 1.0")
+	}
+}
+
+func TestCashHistory(t *testing.T) {
+	cash, err := NewCash("USD")
+	if err != nil {
+		t.Errorf("Error in NewCash - %s", err)
+	}
+
+	time1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
+	time2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
+
+	cash.TakeSnapshot(time1, &cash)
+	cash.TakeSnapshot(time2, &cash)
+
+	history := cash.GetHistory()
+
+	snap1 := history[time1]
+	if !snap1.GetTime().Equal(time1) {
+		t.Error("snap1 - unexpected time.")
+	}
+	if snap1.GetPrice().Float64 != 1.0 {
+		t.Error("snap1 - unexpected price.")
+	}
+
+
+	snap2 := history[time2]
+	if !snap2.GetTime().Equal(time2) {
+		t.Error("snap2 - unexpected time.")
+	}
+	if snap2.GetPrice().Float64 != 1.0 {
+		t.Error("snap2 - unexpected price.")
 	}
 }

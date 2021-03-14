@@ -25,7 +25,4 @@ func TestAssetSnapshot(t *testing.T) {
 	if snap.GetPrice().Float64 != 2.50 {
 		t.Error("Unexpected price")
 	}
-	if snap.GetValue().Float64 != 2.50 {
-		t.Error("Unexpected value")
-	}
 }

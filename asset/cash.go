@@ -4,6 +4,7 @@ var unitPrice = Price{Float64: 1.0, Valid: true}
 
 // Cash represents a cash asset.
 type Cash struct {
+	hasPriceHistory
 	currency string
 }
 
