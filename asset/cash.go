@@ -10,7 +10,7 @@ type Cash struct {
 func NewCash(currency string) (Cash, error) {
 	currency, err := ValidateCurrency(currency)
 	cash := Cash{currency: currency}
-	cash.price = unitPrice
+	cash.price = unitPrice  // price is always 1.0
 	return cash, err
 }
 
