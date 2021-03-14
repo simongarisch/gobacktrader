@@ -98,7 +98,11 @@ func TestPortfolioValuationCurrency(t *testing.T) {
 	stock.SetPrice(Price{Float64: 2.5, Valid: true})
 
 	fxRates := FxRates{}
-	audusd := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
+	audusd, err := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
+
 	fxRates.Register(&audusd)
 	p1.SetFxRates(&fxRates)
 	p2.SetFxRates(&fxRates)
@@ -167,8 +171,14 @@ func TestLargerPortfolio(t *testing.T) {
 	stock3.SetPrice(Price{Float64: 3.5, Valid: true})
 
 	fxRates := FxRates{}
-	audusd := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
-	gbpaud := NewFxRate("GBPAUD", Price{Float64: 1.80, Valid: true})
+	audusd, err1 := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
+	gbpaud, err2 := NewFxRate("GBPAUD", Price{Float64: 1.80, Valid: true})
+	for _, err := range []error{err1, err2} {
+		if err != nil {
+			t.Errorf("Error in NewFxRate - %s", err)
+		}
+	}
+
 	fxRates.Register(&audusd)
 	fxRates.Register(&gbpaud)
 	p.SetFxRates(&fxRates)
@@ -237,7 +247,11 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	stock2.SetPrice(Price{Float64: 2.5, Valid: true})
 
 	fxRates := FxRates{}
-	audusd := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
+	audusd, err := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
+
 	fxRates.Register(&audusd)
 	p.SetFxRates(&fxRates)
 

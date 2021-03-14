@@ -7,7 +7,11 @@ import (
 )
 
 func TestFxRateEvent(t *testing.T) {
-	audusd := asset.NewFxRate("AUDUSD", asset.Price{Float64: 0.75, Valid: true})
+	audusd, err := asset.NewFxRate("AUDUSD", asset.Price{Float64: 0.75, Valid: true})
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
+
 	eventTime := time.Date(2021, time.March, 13, 0, 0, 0, 0, time.UTC)
 	newRate := asset.Price{Float64: 0.80, Valid: true}
 

@@ -65,14 +65,16 @@ func GetInversePair(pair string) (string, error) {
 
 // FxRate associates an FX pair with a rate.
 type FxRate struct {
+	priceHistory
 	pair string
-	rate Price
 }
 
 // NewFxRate returns a new instance of FxRate
-func NewFxRate(pair string, rate Price) FxRate {
-	pair = btutil.CleanString(pair)
-	return FxRate{pair: pair, rate: rate}
+func NewFxRate(pair string, price Price) (FxRate, error) {
+	pair, err := ValidatePair(pair)
+	fxrate := FxRate{pair: pair}
+	fxrate.SetRate(price)
+	return fxrate, err
 }
 
 // GetPair returns the FX pair as a string
@@ -82,17 +84,17 @@ func (r FxRate) GetPair() string {
 
 // GetRate returns the FX rate for this pair.
 func (r FxRate) GetRate() Price {
-	return r.rate
+	return r.price
 }
 
 // SetRate sets the FX rate for this pair.
-func (r *FxRate) SetRate(rate Price) {
-	r.rate = rate
+func (r *FxRate) SetRate(price Price) {
+	r.price = price
 }
 
 // SetPrice does the same as SetRate and sets the rate for this pair.
-func (r *FxRate) SetPrice(rate Price) {
-	r.SetRate(rate)
+func (r *FxRate) SetPrice(price Price) {
+	r.SetRate(price)
 }
 
 // FxRates keeps track of FXRate instances.

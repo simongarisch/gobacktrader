@@ -95,7 +95,10 @@ func TestGetInversePair(t *testing.T) {
 
 func TestFxRate(t *testing.T) {
 	price := Price{Float64: 0.75, Valid: true}
-	fxrate := NewFxRate("audusd", price)
+	fxrate, err := NewFxRate("audusd", price)
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
 
 	pair := fxrate.GetPair()
 	if pair != "AUDUSD" {
@@ -119,8 +122,11 @@ func TestFxRates(t *testing.T) {
 	fxRates := FxRates{}
 
 	price := Price{Float64: 0.75, Valid: true}
-	audusd := NewFxRate("AUDUSD", price)
-	err := fxRates.Register(&audusd)
+	audusd, err := NewFxRate("AUDUSD", price)
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
+	err = fxRates.Register(&audusd)
 	if err != nil {
 		t.Errorf("Error in fxRates.Register - %s", err)
 	}
@@ -166,8 +172,8 @@ func TestFxRatesEmpty(t *testing.T) {
 
 func TestFxRatesRegistering(t *testing.T) {
 	fxRates := FxRates{}
-	xxxyyy := NewFxRate("XXXYYY", Price{Float64: 0.5, Valid: true})
-	yyyxxx := NewFxRate("YYYXXX", Price{Float64: 2.0, Valid: true})
+	xxxyyy, _ := NewFxRate("XXXYYY", Price{Float64: 0.5, Valid: true})
+	yyyxxx, _ := NewFxRate("YYYXXX", Price{Float64: 2.0, Valid: true})
 
 	var err error
 	err = fxRates.Register(&xxxyyy)
@@ -201,9 +207,12 @@ func TestFxRatesEquivalentPairs(t *testing.T) {
 func TestFxRateChanges(t *testing.T) {
 	fxRates := FxRates{}
 	startRate, endRate := 0.75, 0.80
-	audusd := NewFxRate("AUDUSD", Price{Float64: startRate, Valid: true})
+	audusd, err := NewFxRate("AUDUSD", Price{Float64: startRate, Valid: true})
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
 
-	err := fxRates.Register(&audusd)
+	err = fxRates.Register(&audusd)
 	if err != nil {
 		t.Errorf("Error in fxRates.Register - %s", err)
 	}
