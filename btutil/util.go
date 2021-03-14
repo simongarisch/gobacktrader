@@ -19,3 +19,14 @@ func Round2dp(x float64) float64 {
 func Round4dp(x float64) float64 {
 	return math.Round(x*10000) / 10000
 }
+
+// AnyValidError takes a collection of errors and
+// returns the first valid error if one exists, nil otherwise.
+func AnyValidError(errors ...error) error {
+	for _, err := range errors {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

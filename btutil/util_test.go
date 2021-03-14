@@ -1,6 +1,9 @@
 package btutil
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestCleanString(t *testing.T) {
 	result := CleanString(" xYz ")
@@ -25,5 +28,18 @@ func TestRound4dp(t *testing.T) {
 	}
 	if Round4dp(1.21116) != 1.2112 {
 		t.Error("Rounding up error.")
+	}
+}
+
+func TestAnyValidError(t *testing.T) {
+	var e1, e2, e3 error
+	if AnyValidError(e1, e2, e3) != nil {
+		t.Error("Expecting no valid errors.")
+	}
+
+	e2 = errors.New("this is a valid error")
+	err := AnyValidError(e1, e2, e3)
+	if err.Error() != "this is a valid error" {
+		t.Error("Unexpected error string.")
 	}
 }
