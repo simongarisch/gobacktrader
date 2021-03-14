@@ -3,6 +3,7 @@ package asset
 import (
 	"gobacktrader/btutil"
 	"testing"
+	"time"
 )
 
 func TestValidateCurrency(t *testing.T) {
@@ -240,5 +241,42 @@ func TestFxRateChanges(t *testing.T) {
 	}
 	if rate != endRate {
 		t.Errorf("Unexpected FX rate: wanted %0.4f, got %0.4f", endRate, rate)
+	}
+}
+
+func TestFxHistory(t *testing.T) {
+	fxrate, err := NewFxRate("audusd", nullPrice)
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
+
+	time1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
+	time2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
+	price1 := Price{Float64: 0.75, Valid: true}
+	price2 := Price{Float64: 0.80, Valid: true}
+
+	fxrate.SetPrice(price1)
+	fxrate.TakeSnapshot(time1, &fxrate)
+	fxrate.SetPrice(price2)
+	fxrate.TakeSnapshot(time2, &fxrate)
+
+	history := fxrate.GetHistory()
+	
+	// check our first snapshot
+	snap1 := history[time1]
+	if !snap1.GetTime().Equal(time1) {
+		t.Error("snap1 - unexpected time.")
+	}
+	if snap1.GetPrice().Float64 != 0.75 {
+		t.Error("snap1 - unexpected price.")
+	}
+
+	// and our second snapshot
+	snap2 := history[time2]
+	if !snap2.GetTime().Equal(time2) {
+		t.Error("snap2 - unexpected time.")
+	}
+	if snap2.GetPrice().Float64 != 0.8 {
+		t.Error("snap2 - unexpected price.")
 	}
 }
