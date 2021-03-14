@@ -2,26 +2,18 @@
 package asset
 
 import (
-	"database/sql"
 	"gobacktrader/btutil"
 	"time"
 )
 
-// Price is the unit of measurement for asset price and value.
-type Price sql.NullFloat64
-
-var (
-	nullPrice         = Price{Float64: 0.0, Valid: false}
-	defaultMultiplier = 1.0
-)
+var defaultMultiplier = 1.0
 
 // Asset defines a generic asset type with a ticker, price and value.
 type Asset struct {
-	hasPriceHistory  // embed struct for asset snapshots
+	priceHistory  // embed struct for price history
 	ticker       string
 	baseCurrency string
 	multiplier   float64
-	price        Price
 	value        Price
 }
 
@@ -35,7 +27,7 @@ type IAssetReadOnly interface {
 	GetPrice() Price
 	GetValue() Price
 	TakeSnapshot(time.Time, iHasGetPrice)
-	GetHistory() map[time.Time]assetSnapshot
+	GetHistory() map[time.Time]priceSnapshot
 }
 
 // IAssetWriteOnly defines the interface for write only assets.
@@ -84,11 +76,6 @@ func (a *Asset) GetBaseCurrency() string {
 // GetMultiplier returns the asset's multiplier
 func (a *Asset) GetMultiplier() float64 {
 	return a.multiplier
-}
-
-// GetPrice returns the asset's price.
-func (a *Asset) GetPrice() Price {
-	return a.price
 }
 
 // SetPrice sets the asset's price.

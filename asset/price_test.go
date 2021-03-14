@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func TestAssetSnapshot(t *testing.T) {
+func TestPriceSnapshot(t *testing.T) {
 	stock, err := NewStock("ZZB AU", "AUD")
 	if err != nil {
 		t.Errorf("Error in NewStock - %s", err)
@@ -17,7 +17,7 @@ func TestAssetSnapshot(t *testing.T) {
 
 	// create our new snapshot and test
 	timestamp := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
-	snap := newAssetSnapshot(timestamp, &stock)
+	snap := newPriceSnapshot(timestamp, &stock)
 
 	if !snap.GetTime().Equal(timestamp) {
 		t.Error("Unexpected timestamp")
