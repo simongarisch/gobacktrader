@@ -2,15 +2,15 @@ package asset
 
 import "time"
 
-// AssetSnapshot defines a snapshot in time for a given asset.
+// assetSnapshot defines a snapshot in time for a given asset.
 type assetSnapshot struct {
 	timestamp time.Time
 	price Price
 	value Price
 }
 
-// NewAssetSnapshot returns a new instance of assetSnapshot
-func NewAssetSnapshot(timestamp time.Time, a IAssetReadOnly) assetSnapshot {
+// newAssetSnapshot returns a new instance of assetSnapshot
+func newAssetSnapshot(timestamp time.Time, a IAssetReadOnly) assetSnapshot {
 	return assetSnapshot {
 		timestamp: timestamp,
 		price: a.GetPrice(),
