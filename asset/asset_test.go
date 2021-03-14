@@ -2,6 +2,7 @@ package asset
 
 import (
 	"testing"
+	"time"
 )
 
 func TestNewAsset(t *testing.T) {
@@ -72,5 +73,48 @@ func TestRevalue(t *testing.T) {
 	expectedValueFloat := 200.0
 	if valueFloat != expectedValueFloat {
 		t.Errorf("Unexpected value: wanted %0.2f, got %0.2f", expectedValueFloat, valueFloat)
+	}
+}
+
+func TestAssetHistory(t *testing.T) {
+	stock, err := NewStock("ZZB AU", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewStock - %s", err)
+	}
+
+	time1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
+	time2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
+	price1 := Price{Float64: 2.5, Valid: true}
+	price2 := Price{Float64: 3.0, Valid: true}
+
+	stock.SetPrice(price1)
+	stock.TakeSnapshot(time1)
+	stock.SetPrice(price2)
+	stock.TakeSnapshot(time2)
+
+	history := stock.GetHistory()
+	
+	// check our first snapshot
+	snap1 := history[time1]
+	if !snap1.GetTime().Equal(time1) {
+		t.Error("snap1 - unexpected time.")
+	}
+	if snap1.GetPrice().Float64 != 2.5 {
+		t.Error("snap1 - unexpected price.")
+	}
+	if snap1.GetValue().Float64 != 2.5 {
+		t.Error("snap1 - unexpected value.")
+	}
+
+	// and our second snapshot
+	snap2 := history[time2]
+	if !snap2.GetTime().Equal(time2) {
+		t.Error("snap2 - unexpected time.")
+	}
+	if snap2.GetPrice().Float64 != 3.0 {
+		t.Error("snap2 - unexpected price.")
+	}
+	if snap2.GetValue().Float64 != 3.0 {
+		t.Error("snap2 - unexpected value.")
 	}
 }

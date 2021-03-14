@@ -48,10 +48,12 @@ type IAssetWriteOnly interface {
 func NewAsset(ticker string, baseCurrency string) (Asset, error) {
 	ticker = btutil.CleanString(ticker)
 	baseCurrency, err := ValidateCurrency(baseCurrency)
+	history := make(map[time.Time]assetSnapshot)
 	asset := Asset{
 		ticker:       ticker,
 		baseCurrency: baseCurrency,
 		multiplier:   defaultMultiplier,
+		history: history,
 	}
 	return asset, err
 }
@@ -61,10 +63,12 @@ func NewAsset(ticker string, baseCurrency string) (Asset, error) {
 func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float64) (Asset, error) {
 	ticker = btutil.CleanString(ticker)
 	baseCurrency, err := ValidateCurrency(baseCurrency)
+	history := make(map[time.Time]assetSnapshot)
 	asset := Asset{
 		ticker:       ticker,
 		baseCurrency: baseCurrency,
 		multiplier:   multiplier,
+		history: history,
 	}
 	return asset, err
 }
@@ -89,11 +93,22 @@ func (a *Asset) GetPrice() Price {
 	return a.price
 }
 
+// GetHistory returns a copy of the asset's snapshot history.
+func (a Asset) GetHistory() map[time.Time]assetSnapshot {
+	return a.history
+} 
+
 // SetPrice sets the asset's price.
 // The Revalue method is automatically called after setting price.
 func (a *Asset) SetPrice(price Price) {
 	a.price = price
 	a.Revalue()
+}
+
+// TakeSnapshot takes a snapshot for this asset for a paricular time.
+func (a *Asset) TakeSnapshot(timestamp time.Time) {
+	snap := newAssetSnapshot(timestamp, a)
+	a.history[timestamp] = snap
 }
 
 // GetValue returns the asset's value.
