@@ -4,6 +4,7 @@ package asset
 import (
 	"database/sql"
 	"gobacktrader/btutil"
+	"time"
 )
 
 // Price is the unit of measurement for asset price and value.
@@ -21,7 +22,9 @@ type Asset struct {
 	multiplier   float64
 	price        Price
 	value        Price
+	history      map[time.Time]assetSnapshot
 }
+
 
 // IAssetReadOnly defines the interface for read only assets.
 // Given these interface methods take a pointer receiver only
@@ -29,6 +32,7 @@ type Asset struct {
 type IAssetReadOnly interface {
 	GetTicker() string
 	GetBaseCurrency() string
+	GetPrice() Price
 	GetValue() Price
 }
 
