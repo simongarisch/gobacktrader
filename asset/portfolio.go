@@ -2,11 +2,12 @@ package asset
 
 import (
 	"database/sql"
-	"fmt"
 )
 
 // Weight represents an asset weight for a given portfolio.
 type Weight sql.NullFloat64
+
+var nullWeight = Weight{Float64: 0.0, Valid: false}
 
 // Portfolio consists of a collection of positions.
 type Portfolio struct {
@@ -57,45 +58,19 @@ func (p *Portfolio) GetUnits(a IAssetReadOnly) float64 {
 	return position.GetUnits()
 }
 
+// GetWeight returns the portfolio weight in a given asset.
 func (p *Portfolio) GetWeight(a IAssetReadOnly) (Weight, error) {
-	invalidWeight := Weight{Float64: 0.0, Valid: false}
-	position, ok := p.positions[a]
-	if !ok {
-		return Weight{Float64: 0.0, Valid: true}, nil
-	}
-
-	// we need a valid position value to continue
-	positionValue := position.GetValue()
-	if !positionValue.Valid {
-		return invalidWeight, nil
-	}
-
-	// value this position in the portfolio base currency
-	pair := position.GetBaseCurrency() + p.GetBaseCurrency()
-	fxRate, ok, err := p.fxRates.GetRate(pair)
+	_, positionWeights, err := p.GetValueWeights()
 	if err != nil {
-		return invalidWeight, err
+		return nullWeight, err
 	}
+
+	weight, ok := positionWeights[a]
 	if !ok {
-		return invalidWeight, nil // no valid FX rate initialised.
+		return nullWeight, nil
 	}
 
-	// collect the portfolio value
-	positionBaseCurrencyValue := positionValue.Float64 * fxRate
-	portfolioValue, err := p.GetValue()
-	if err != nil {
-		return invalidWeight, err
-	}
-	if !portfolioValue.Valid {
-		return invalidWeight, nil
-	}
-
-	if portfolioValue.Float64 == 0.0 {
-		return invalidWeight, fmt.Errorf("'%s' unable to collect weights with a zero portfolio value", p.GetCode())
-	}
-
-	weight := positionBaseCurrencyValue / portfolioValue.Float64
-	return Weight{Float64: weight, Valid: true}, nil
+	return weight, nil
 }
 
 // ModifyPositions allows us to increment and decrement positions
@@ -111,30 +86,54 @@ func (p *Portfolio) ModifyPositions(a IAssetReadOnly, units float64) {
 
 // GetValue returns our portfolio value.
 func (p Portfolio) GetValue() (Price, error) {
-	totalValue := 0.0
+	portfolioValue, _, err := p.GetValueWeights()
+	return portfolioValue, err
+}
+
+// GetValueWeights returns the portfolio value along with all position weights.
+func (p *Portfolio) GetValueWeights() (Price, map[IAssetReadOnly]Weight, error) {
+	var totalValueFloat float64
+	portfolioValue := nullPrice
 	valid := true
+	positionValues := make(map[IAssetReadOnly]Price)
+	positionWeights := make(map[IAssetReadOnly]Weight)
+
 	for _, position := range p.positions {
+		asset := position.GetAsset()
 		value := position.GetValue()
-		if !value.Valid {
+		if !value.Valid { // no value, so value and weight invalid
 			valid = false
-			break
+			positionValues[asset] = nullPrice
+			positionWeights[asset] = nullWeight
+			continue
 		}
 
 		assetBaseCurrency := position.GetBaseCurrency()
 		pair := assetBaseCurrency + p.baseCurrency
 		fxRate, ok, err := p.fxRates.GetRate(pair)
 		if err != nil {
-			return Price{}, err
+			return portfolioValue, positionWeights, err
 		}
-		if !ok {
+		if !ok { // no fx rate, so value and weight invalid
 			valid = false
-			break
+			positionValues[asset] = nullPrice
+			positionWeights[asset] = nullWeight
+			continue
 		}
 
-		totalValue += value.Float64 * fxRate
+		positionValueBaseCurrency := value.Float64 * fxRate
+		positionValues[asset] = Price{Float64: positionValueBaseCurrency, Valid: true}
+		totalValueFloat += positionValueBaseCurrency
 	}
 
-	return Price{Float64: totalValue, Valid: valid}, nil
+	if valid { // all assets have a valid value which we can use to derive portfolio value
+		portfolioValue = Price{Float64: totalValueFloat, Valid: true}
+		for asset, price := range positionValues {
+			positionWeights[asset] = Weight{Float64: price.Float64 / totalValueFloat, Valid: true}
+		}
+	}
+
+	return portfolioValue, positionWeights, nil
 }
 
 // SetFxRates sets the FX rates object to be used for this portfolio.
