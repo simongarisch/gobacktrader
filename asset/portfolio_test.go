@@ -84,10 +84,8 @@ func TestPortfolioValuationCurrency(t *testing.T) {
 	// create a stock
 	stock, err1 := NewStock("ZZB AU", "AUD")
 	cash, err2 := NewCash("AUD")
-	for _, err := range []error{err1, err2} {
-		if err != nil {
-			t.Errorf("Error in portfolio asset creation - %s", err)
-		}
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in portfolio asset creation - %s", err)
 	}
 
 	// Give both p1 and p2 200 shares of stock and $100 cash.
@@ -144,19 +142,15 @@ func TestLargerPortfolio(t *testing.T) {
 	stock1, err1 := NewStock("ZZA AU", "AUD")
 	stock2, err2 := NewStock("ZZU US", "USD")
 	stock3, err3 := NewStock("ZZG AU", "GBP")
-	for _, err := range []error{err1, err2, err3} {
-		if err != nil {
-			t.Errorf("Error in NewStock - %s", err)
-		}
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in NewStock - %s", err)
 	}
 
 	aud, err1 := NewCash("AUD")
 	usd, err2 := NewCash("USD")
 	gbp, err3 := NewCash("GBP")
-	for _, err := range []error{err1, err2, err3} {
-		if err != nil {
-			t.Errorf("Error in NewCash - %s", err)
-		}
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in NewCash - %s", err)
 	}
 
 	// add 100 shares of each stock and $100 for each currency
@@ -174,10 +168,8 @@ func TestLargerPortfolio(t *testing.T) {
 	fxRates := FxRates{}
 	audusd, err1 := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
 	gbpaud, err2 := NewFxRate("GBPAUD", Price{Float64: 1.80, Valid: true})
-	for _, err := range []error{err1, err2} {
-		if err != nil {
-			t.Errorf("Error in NewFxRate - %s", err)
-		}
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
 	}
 
 	fxRates.Register(&audusd)
@@ -224,18 +216,14 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 
 	stock1, err1 := NewStock("ZZA AU", "AUD")
 	stock2, err2 := NewStock("ZZU US", "USD")
-	for _, err := range []error{err1, err2} {
-		if err != nil {
-			t.Errorf("Error in NewStock - %s", err)
-		}
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in NewStock - %s", err)
 	}
 
 	aud, err1 := NewCash("AUD")
 	usd, err2 := NewCash("USD")
-	for _, err := range []error{err1, err2} {
-		if err != nil {
-			t.Errorf("Error in NewCash - %s", err)
-		}
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in NewCash - %s", err)
 	}
 
 	// add 100 shares of each stock and $100 for each currency
