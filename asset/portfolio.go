@@ -53,15 +53,17 @@ type Portfolio struct {
 }
 
 // NewPortfolio returns a new instance of Portfolio.
-func NewPortfolio(code string, baseCurrency string) Portfolio {
+func NewPortfolio(code string, baseCurrency string) (Portfolio, error) {
 	positions := make(map[IAssetReadOnly]*Position)
 	history := make(map[time.Time]PortfolioSnapshot)
-	return Portfolio{
+	baseCurrency, err := ValidateCurrency(baseCurrency)
+	portfolio := Portfolio{
 		code:         code,
 		baseCurrency: baseCurrency,
 		positions:    positions,
 		history:      history,
 	}
+	return portfolio, err
 }
 
 // GetCode returns our portfolio code

@@ -7,7 +7,10 @@ import (
 )
 
 func TestNewPortfolio(t *testing.T) {
-	p := NewPortfolio("XXX", "AUD")
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
 	if p.GetCode() != "XXX" {
 		t.Error("Unexpected portfolio code.")
 	}
@@ -20,7 +23,10 @@ func TestNewPortfolio(t *testing.T) {
 }
 
 func TestPortfolioValuation(t *testing.T) {
-	p := NewPortfolio("XXX", "AUD")
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
 
 	// portfolios should have a zero value to start with
 	value, err := p.GetValue()
@@ -78,8 +84,11 @@ func TestPortfolioValuation(t *testing.T) {
 }
 
 func TestPortfolioValuationCurrency(t *testing.T) {
-	p1 := NewPortfolio("XXX", "AUD")
-	p2 := NewPortfolio("YYY", "USD")
+	p1, err1 := NewPortfolio("XXX", "AUD")
+	p2, err2 := NewPortfolio("YYY", "USD")
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
 
 	// create a stock
 	stock, err1 := NewStock("ZZB AU", "AUD")
@@ -133,7 +142,10 @@ func TestPortfolioValuationCurrency(t *testing.T) {
 }
 
 func TestLargerPortfolio(t *testing.T) {
-	p := NewPortfolio("XXX", "AUD")
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
 	code := p.GetCode()
 	if code != "XXX" {
 		t.Errorf("Unexpected portfolio code: wanted 'XXX', got '%s'", code)
@@ -212,7 +224,10 @@ func TestLargerPortfolio(t *testing.T) {
 }
 
 func TestPortfolioUnitsWeight(t *testing.T) {
-	p := NewPortfolio("XXX", "AUD")
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
 
 	stock1, err1 := NewStock("ZZA AU", "AUD")
 	stock2, err2 := NewStock("ZZU US", "USD")
@@ -298,7 +313,10 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 }
 
 func TestPortfolioSnapshots(t *testing.T) {
-	p := NewPortfolio("XXX", "AUD")
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
 
 	stock, err1 := NewStock("ZZA AU", "AUD")
 	cash, err2 := NewCash("AUD")
