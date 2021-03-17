@@ -3,6 +3,7 @@ package asset
 import (
 	"gobacktrader/btutil"
 	"testing"
+	"time"
 )
 
 func TestNewPortfolio(t *testing.T) {
@@ -290,10 +291,8 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	wStock2, err2 := p.GetWeight(&stock2)
 	wAud, err3 := p.GetWeight(&aud)
 	wUsd, err4 := p.GetWeight(&usd)
-	for _, err := range []error{err1, err2, err3, err4} {
-		if err != nil {
-			t.Errorf("Error in portfolio.GetWeight - %s", err)
-		}
+	if err := btutil.AnyValidError(err1, err3, err3, err4); err != nil {
+		t.Errorf("Error in portfolio.GetWeight - %s", err)
 	}
 
 	if btutil.Round4dp(wStock1.Float64) != 0.2093 {
@@ -307,5 +306,71 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	}
 	if btutil.Round4dp(wUsd.Float64) != 0.1860 {
 		t.Errorf("'%s' expecting a portfolio weight of 0.1860, got %0.4f", usd.GetTicker(), wUsd.Float64)
+	}
+}
+
+func TestPortfolioSnapshots(t *testing.T) {
+	p := NewPortfolio("XXX", "AUD")
+
+	stock, err1 := NewStock("ZZA AU", "AUD")
+	cash, err2 := NewCash("AUD")
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Asset error - %s", err)
+	}
+
+	// add 100 units of each
+	p.ModifyPositions(&stock, 100)
+	p.ModifyPositions(&cash, 100)
+	stock.SetPrice(Price{Float64: 1.5, Valid: true})
+
+	// portfolio value is 1.50 * 100 + 100 = 250 AUD
+	// wStock = 150 / 250 = 60%
+	// wCash = 100 / 250 = 40%
+	t1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
+	p.TakeSnapshot(t1)
+
+	stock.SetPrice(Price{Float64: 3.0, Valid: true})
+	// portfolio value is 3.00 * 100 + 100 = 400 AUD
+	// wStock = 300 / 400 = 75%
+	// wCash = 100 / 400 = 25%
+	t2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
+	p.TakeSnapshot(t2)
+
+	history := p.GetHistory()
+	snap1, _ := history[t1]
+	snap2, _ := history[t2]
+
+	// check the first snapshot
+	if !snap1.GetTime().Equal(t1) {
+		t.Error("Unexpected time for snap1")
+	}
+	if snap1.GetValue().Float64 != 250 {
+		t.Errorf("Unexpected value: wanted 250.00, got %0.2f", snap1.GetValue().Float64)
+	}
+	weights := snap1.GetWeights()
+	wStock, _ := weights[&stock]
+	wCash, _ := weights[&cash]
+	if wStock.Float64 != 0.6 {
+		t.Errorf("Unexpected stock weight: wanted 0.60, got %0.2f", wStock.Float64)
+	}
+	if wCash.Float64 != 0.4 {
+		t.Errorf("Unexpected cash weight: wanted 0.40, got %0.2f", wCash.Float64)
+	}
+
+	// and the second
+	if !snap2.GetTime().Equal(t2) {
+		t.Error("Unexpected time for snap2")
+	}
+	if snap2.GetValue().Float64 != 400 {
+		t.Errorf("Unexpected value: wanted 400.00, got %0.2f", snap2.GetValue().Float64)
+	}
+	weights = snap2.GetWeights()
+	wStock, _ = weights[&stock]
+	wCash, _ = weights[&cash]
+	if wStock.Float64 != 0.75 {
+		t.Errorf("Unexpected stock weight: wanted 0.75, got %0.2f", wStock.Float64)
+	}
+	if wCash.Float64 != 0.25 {
+		t.Errorf("Unexpected cash weight: wanted 0.25, got %0.2f", wCash.Float64)
 	}
 }

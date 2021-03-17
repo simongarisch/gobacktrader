@@ -2,6 +2,7 @@ package asset
 
 import (
 	"database/sql"
+	"time"
 )
 
 // Weight represents an asset weight for a given portfolio.
@@ -9,21 +10,57 @@ type Weight sql.NullFloat64
 
 var nullWeight = Weight{Float64: 0.0, Valid: false}
 
+// PortfolioSnapshot takes a snapshot of portfolio value and weights
+// for a specific timestamp.
+type PortfolioSnapshot struct {
+	timestamp time.Time
+	value     Price
+	weights   map[IAssetReadOnly]Weight
+}
+
+func newPortfolioSnapshot(timestamp time.Time, p *Portfolio) (PortfolioSnapshot, error) {
+	portfolioValue, positionWeights, err := p.GetValueWeights()
+	snap := PortfolioSnapshot{
+		timestamp: timestamp,
+		value:     portfolioValue,
+		weights:   positionWeights,
+	}
+	return snap, err
+}
+
+// GetTime returns the timestamp for our snapshot.
+func (s PortfolioSnapshot) GetTime() time.Time {
+	return s.timestamp
+}
+
+// GetValue returns the portfolio value for our snapshot.
+func (s PortfolioSnapshot) GetValue() Price {
+	return s.value
+}
+
+// GetWeights returns the portfolio weights for our snapshot.
+func (s PortfolioSnapshot) GetWeights() map[IAssetReadOnly]Weight {
+	return s.weights
+}
+
 // Portfolio consists of a collection of positions.
 type Portfolio struct {
 	code         string
 	baseCurrency string
 	positions    map[IAssetReadOnly]*Position
 	fxRates      *FxRates
+	history      map[time.Time]PortfolioSnapshot
 }
 
 // NewPortfolio returns a new instance of Portfolio.
 func NewPortfolio(code string, baseCurrency string) Portfolio {
 	positions := make(map[IAssetReadOnly]*Position)
+	history := make(map[time.Time]PortfolioSnapshot)
 	return Portfolio{
 		code:         code,
 		baseCurrency: baseCurrency,
 		positions:    positions,
+		history:      history,
 	}
 }
 
@@ -139,4 +176,20 @@ func (p *Portfolio) GetValueWeights() (Price, map[IAssetReadOnly]Weight, error) 
 // SetFxRates sets the FX rates object to be used for this portfolio.
 func (p *Portfolio) SetFxRates(fxRates *FxRates) {
 	p.fxRates = fxRates
+}
+
+// TakeSnapshot takes a portfolio snapshot for a given timestamp.
+func (p *Portfolio) TakeSnapshot(timestamp time.Time) error {
+	snap, err := newPortfolioSnapshot(timestamp, p)
+	if err != nil {
+		return err
+	}
+
+	p.history[timestamp] = snap
+	return nil
+}
+
+// GetHistory returns the portfolio snapshot history.
+func (p Portfolio) GetHistory() map[time.Time]PortfolioSnapshot {
+	return p.history
 }
