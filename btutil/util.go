@@ -39,3 +39,23 @@ func GetErrorString(err error) string {
 	}
 	return err.Error()
 }
+
+// PadRight pads a string on the right.
+func PadRight(str, pad string, length uint) string {
+	for {
+		str += pad
+		if len(str) > int(length) {
+			return str[0:length]
+		}
+	}
+}
+
+// PadLeft pads a string on the left.
+func PadLeft(str, pad string, length uint) string {
+	for {
+		str = pad + str
+		if len(str) > int(length) {
+			return str[(len(str) - int(length)):]
+		}
+	}
+}
