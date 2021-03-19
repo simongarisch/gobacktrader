@@ -2,6 +2,7 @@ package asset
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -125,8 +126,28 @@ func (p *Portfolio) ModifyPositions(a IAssetReadOnly, units float64) {
 
 // GetValue returns our portfolio value.
 func (p Portfolio) GetValue() (Price, error) {
-	portfolioValue, _, err := p.GetValueWeights()
-	return portfolioValue, err
+	var totalValueFloat float64
+
+	for _, position := range p.positions {
+		value := position.GetValue()
+		if !value.Valid { // no value, so value and weight invalid
+			return nullPrice, nil
+		}
+
+		assetBaseCurrency := position.GetBaseCurrency()
+		pair := assetBaseCurrency + p.baseCurrency
+		fxRate, ok, err := p.fxRates.GetRate(pair)
+		if err != nil {
+			return nullPrice, err
+		}
+		if !ok { // no fx rate, so value and weight invalid
+			return nullPrice, nil
+		}
+
+		totalValueFloat += value.Float64 * fxRate
+	}
+
+	return Price{Float64: totalValueFloat, Valid: true}, nil
 }
 
 // GetValueWeights returns the portfolio value along with all position weights.
@@ -163,6 +184,11 @@ func (p *Portfolio) GetValueWeights() (Price, map[IAssetReadOnly]Weight, error) 
 		positionValueBaseCurrency := value.Float64 * fxRate
 		positionValues[asset] = Price{Float64: positionValueBaseCurrency, Valid: true}
 		totalValueFloat += positionValueBaseCurrency
+	}
+
+	if totalValueFloat == 0.0 {
+		err := errors.New("cannot calculate weights for portfolio with zero value")
+		return portfolioValue, positionWeights, err
 	}
 
 	if valid { // all assets have a valid value which we can use to derive portfolio value
