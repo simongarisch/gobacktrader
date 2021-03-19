@@ -19,6 +19,14 @@ func TestNewAsset(t *testing.T) {
 	if asset.GetPrice().Valid {
 		t.Error("Expecting an uninitialised price")
 	}
+	if asset.GetValue() != nullPrice {
+		t.Error("Expecting an invalid value")
+	}
+
+	asset.Revalue() // but we don't have a price yet
+	if asset.GetValue() != nullPrice {
+		t.Error("Expecting an invalid value")
+	}
 
 	multiplier := asset.GetMultiplier()
 	if multiplier != defaultMultiplier {
@@ -93,7 +101,7 @@ func TestAssetHistory(t *testing.T) {
 	stock.TakeSnapshot(time2, &stock)
 
 	history := stock.GetHistory()
-	
+
 	// check our first snapshot
 	snap1 := history[time1]
 	if !snap1.GetTime().Equal(time1) {
