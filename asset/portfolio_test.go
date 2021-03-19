@@ -83,6 +83,75 @@ func TestPortfolioValuation(t *testing.T) {
 	}
 }
 
+func TestGetWeight(t *testing.T) {
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
+
+	a, _ := NewStock("AAA AU", "AUD")
+	_, err = p.GetWeight(&a)
+	if btutil.GetErrorString(err) != "cannot calculate weights for portfolio with zero value" {
+		t.Errorf("Unexpected error string.")
+	}
+
+	stock, err1 := NewStock("ZZB AU", "AUD")
+	cash, err2 := NewCash("AUD")
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in portfolio asset creation - %s", err)
+	}
+
+	// put 100% of the portfolio weight in our stock
+	stock.SetPrice(Price{Float64: 10.0, Valid: true})
+	p.ModifyPositions(&stock, 100)
+	weight, err := p.GetWeight(&stock)
+	if err != nil {
+		t.Errorf("Error in GetWeight - %s", err)
+	}
+	if weight.Float64 != 1.0 {
+		t.Error("Expecting a stock weight of 100%")
+	}
+
+	weight, err = p.GetWeight(&cash)
+	if err != nil {
+		t.Errorf("Error in GetWeight - %s", err)
+	}
+	if weight.Float64 != 0.0 {
+		t.Error("Expecting a zero weight in cash")
+	}
+
+	// add $200 cash by incrementing positions twice
+	p.ModifyPositions(&cash, 150)
+	p.ModifyPositions(&cash, 50)
+	stock.SetPrice(Price{Float64: 8.0, Valid: true})
+
+	// stock value = 100 * 8 = 800
+	// cash value = 200
+	// total value = 1000
+	// stock weight = 80%, cash weight = 20%
+	weight, err = p.GetWeight(&stock)
+	if err != nil {
+		t.Errorf("Error in GetWeight - %s", err)
+	}
+	if weight.Float64 != 0.8 {
+		t.Error("Expecting a stock weight of 80%")
+	}
+
+	weight, err = p.GetWeight(&cash)
+	if err != nil {
+		t.Errorf("Error in GetWeight - %s", err)
+	}
+	if weight.Float64 != 0.2 {
+		t.Error("Expecting a cash weight of 20%")
+	}
+
+	str := p.Show()
+	expected := "---Portfolio('XXX')---\nAUD        200.00\nZZB AU     100.00\n"
+	if str != expected {
+		t.Errorf("Unexpected format in portfolio.Show")
+	}
+}
+
 func TestPortfolioValuationCurrency(t *testing.T) {
 	p1, err1 := NewPortfolio("XXX", "AUD")
 	p2, err2 := NewPortfolio("YYY", "USD")
@@ -239,6 +308,17 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	usd, err2 := NewCash("USD")
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in NewCash - %s", err)
+	}
+
+	// this portfolio is currently empty
+	if p.NumPositions() != 0 {
+		t.Errorf("Expecting zero positions for an initialised portfolio.")
+	}
+	if p.GetUnits(&stock1) != 0.0 {
+		t.Error("Expecting zero units in stock1.")
+	}
+	if p.GetUnits(&aud) != 0.0 {
+		t.Error("Expecting zero units in aud cash.")
 	}
 
 	// add 100 shares of each stock and $100 for each currency

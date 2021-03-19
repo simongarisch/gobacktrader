@@ -3,6 +3,9 @@ package asset
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"gobacktrader/btutil"
+	"sort"
 	"time"
 )
 
@@ -51,6 +54,35 @@ type Portfolio struct {
 	positions    map[IAssetReadOnly]*Position
 	fxRates      *FxRates
 	history      map[time.Time]PortfolioSnapshot
+}
+
+// Show will print and return a string representation
+// of the portfolio positions.
+func (p Portfolio) Show() string {
+	maxTickerLen := 0
+	for asset := range p.positions {
+		ticker := asset.GetTicker()
+		lenTicker := len(ticker)
+		if lenTicker > maxTickerLen {
+			maxTickerLen = lenTicker
+		}
+	}
+
+	var positionList []string
+	for asset, position := range p.positions {
+		ticker := btutil.PadRight(asset.GetTicker(), " ", uint(maxTickerLen+5))
+		units := fmt.Sprintf("%0.2f", position.GetUnits())
+		positionList = append(positionList, ticker+units+"\n")
+	}
+
+	output := "---Portfolio('" + p.code + "')---\n"
+	sort.Strings(positionList)
+	for _, item := range positionList {
+		output += item
+	}
+
+	fmt.Println(output)
+	return output
 }
 
 // NewPortfolio returns a new instance of Portfolio.
@@ -119,9 +151,9 @@ func (p *Portfolio) ModifyPositions(a IAssetReadOnly, units float64) {
 	// if the asset is already held then modify its position
 	if p.HasAsset(a) {
 		p.positions[a].Increment(units)
+	} else { // otherwise create a new position for this asset
+		p.positions[a] = &Position{a, units}
 	}
-	// otherwise create a new position for this asset
-	p.positions[a] = &Position{a, units}
 }
 
 // GetValue returns our portfolio value.
