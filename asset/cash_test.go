@@ -16,7 +16,10 @@ func TestNewCash(t *testing.T) {
 		t.Error("Expected a 'USD' currency code.")
 	}
 	if cash.GetBaseCurrency() != "USD" {
-		t.Error("Expected a 'USD' base currency code")
+		t.Error("Expected a 'USD' base currency code.")
+	}
+	if cash.GetCurrency() != cash.GetTicker() {
+		t.Error("Currency and ticker should be the same for cash.")
 	}
 
 	// and an invalid currency
@@ -73,7 +76,6 @@ func TestCashHistory(t *testing.T) {
 	if snap1.GetPrice().Float64 != 1.0 {
 		t.Error("snap1 - unexpected price.")
 	}
-
 
 	snap2 := history[time2]
 	if !snap2.GetTime().Equal(time2) {

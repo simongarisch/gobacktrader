@@ -21,7 +21,7 @@ func TestValidateCurrency(t *testing.T) {
 	if err == nil {
 		t.Error("Expecting an error for invalid currency 'USDA'")
 	}
-	if err.Error() != "'USDA' is not a valid currency code" {
+	if btutil.GetErrorString(err) != "'USDA' is not a valid currency code" {
 		t.Error("Unexpected error message string.")
 	}
 }
@@ -38,7 +38,7 @@ func TestValidatePair(t *testing.T) {
 
 	// then an invalid pair
 	pair, err = ValidatePair("AUDUSDX")
-	if err.Error() != "expecting a six character currency pair, got 'AUDUSDX'" {
+	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDX'" {
 		t.Error("Unexpected error string")
 	}
 }
@@ -56,7 +56,7 @@ func TestSplitPair(t *testing.T) {
 	}
 
 	_, _, err = SplitPair("AUDUSDX")
-	if err.Error() != "expecting a six character currency pair, got 'AUDUSDX'" {
+	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDX'" {
 		t.Error("Unexpected error string")
 	}
 }
@@ -77,6 +77,11 @@ func TestIsEquivalentPair(t *testing.T) {
 	if isEquivalent {
 		t.Error("AUDUSD should not be an equivalent pair")
 	}
+
+	_, err = IsEquivalentPair("AUDUSDA")
+	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDA'" {
+		t.Error("Unexpected error string.")
+	}
 }
 
 func TestGetInversePair(t *testing.T) {
@@ -89,7 +94,7 @@ func TestGetInversePair(t *testing.T) {
 	}
 
 	_, err = GetInversePair("AUDUSDX")
-	if err.Error() != "expecting a six character currency pair, got 'AUDUSDX'" {
+	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDX'" {
 		t.Error("Unexpected error string")
 	}
 }
@@ -172,7 +177,7 @@ func TestFxRatesEmpty(t *testing.T) {
 }
 
 func TestFxRatesRegistering(t *testing.T) {
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 	xxxyyy, _ := NewFxRate("XXXYYY", Price{Float64: 0.5, Valid: true})
 	yyyxxx, _ := NewFxRate("YYYXXX", Price{Float64: 2.0, Valid: true})
 
@@ -183,13 +188,31 @@ func TestFxRatesRegistering(t *testing.T) {
 	}
 
 	err = fxRates.Register(&yyyxxx) // we already implicitly have this rate
-	if err.Error() != "'YYYXXX' fx rate instance already exists" {
+	if btutil.GetErrorString(err) != "'YYYXXX' fx rate instance already exists" {
 		t.Error("Unexpected error when registering inverse rate.")
+	}
+
+	// try an invalid FxRate
+	fxRate := FxRate{pair: "AUDUSDA"}
+	err = fxRates.Register(&fxRate)
+	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDA'" {
+		t.Error("Unexpected error string.")
+	}
+}
+
+func TestFxRatesBadRegister(t *testing.T) {
+	badRate := FxRate{pair: "AUDUSDA"}
+	goodRate := FxRate{pair: "AUDUSD"}
+	fxRates := FxRates{rates: []*FxRate{&badRate}}
+
+	err := fxRates.Register(&goodRate)
+	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDA'" {
+		t.Error("Unexpected error string.")
 	}
 }
 
 func TestFxRatesEquivalentPairs(t *testing.T) {
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 	equivalentPairs := []string{"AUDAUD", "USDUSD", "GBPGBP"}
 	for _, pair := range equivalentPairs {
 		rate, ok, err := fxRates.GetRate(pair)
@@ -205,8 +228,34 @@ func TestFxRatesEquivalentPairs(t *testing.T) {
 	}
 }
 
+func TestZeroRates(t *testing.T) {
+	fxRates := NewFxRates()
+	fxRate, err := NewFxRate("AUDUSD", Price{Float64: 0.0, Valid: true})
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
+	fxRates.Register(&fxRate)
+
+	_, _, err = fxRates.GetRate("AUDUSD")
+	if btutil.GetErrorString(err) != "'AUDUSD' FX rate is zero" {
+		t.Error("Unexpected error string.")
+	}
+	_, _, err = fxRates.GetRate("USDAUD")
+	if btutil.GetErrorString(err) != "'USDAUD' FX rate is zero" {
+		t.Error("Unexpected error string.")
+	}
+}
+
+func TestGetRateInvalidPair(t *testing.T) {
+	fxRates := NewFxRates()
+	_, _, err := fxRates.GetRate("AUDUSDA")
+	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDA'" {
+		t.Error("Unexpected error string.")
+	}
+}
+
 func TestFxRateChanges(t *testing.T) {
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 	startRate, endRate := 0.75, 0.80
 	audusd, err := NewFxRate("AUDUSD", Price{Float64: startRate, Valid: true})
 	if err != nil {
@@ -261,7 +310,7 @@ func TestFxHistory(t *testing.T) {
 	fxrate.TakeSnapshot(time2, &fxrate)
 
 	history := fxrate.GetHistory()
-	
+
 	// check our first snapshot
 	snap1 := history[time1]
 	if !snap1.GetTime().Equal(time1) {
