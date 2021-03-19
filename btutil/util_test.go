@@ -43,3 +43,15 @@ func TestAnyValidError(t *testing.T) {
 		t.Error("Unexpected error string.")
 	}
 }
+
+func TestGetErrorString(t *testing.T) {
+	if GetErrorString(nil) != "" {
+		t.Error("Expecting a blank error string.")
+	}
+
+	s := "test one two three"
+	err := errors.New(s)
+	if GetErrorString(err) != s {
+		t.Error("Unexpected error string.")
+	}
+}

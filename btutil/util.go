@@ -30,3 +30,12 @@ func AnyValidError(errors ...error) error {
 	}
 	return nil
 }
+
+// GetErrorString returns the a string representation of the error.
+// This will be blank if the error is nil.
+func GetErrorString(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
+}
