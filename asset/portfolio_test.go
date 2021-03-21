@@ -481,8 +481,8 @@ func TestPortfolioNoFxRate(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in portfolio.GetValue - %s", err)
 	}
-	if value != nullPrice {
-		t.Error("Expecting a null price with no FX rate for valuation.")
+	if value != nullValue {
+		t.Error("Expecting a null value with no FX rate for valuation.")
 	}
 
 	// set the fx rates so we can get a valuation
@@ -537,7 +537,7 @@ func TestGetValueWeightsError(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in GetValueWeights - %s", err)
 	}
-	if portfolioValue != nullPrice {
+	if portfolioValue != nullValue {
 		t.Error("Expecting an invalid portfolio value.")
 	}
 	weight, ok := portfolioWeights[&stock]
@@ -601,7 +601,7 @@ func TestGetValueWeightsError(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in GetValueWeights - %s", err)
 	}
-	if portfolioValue != nullPrice {
+	if portfolioValue != nullValue {
 		t.Error("Expecting an invalid value for this portfolio.")
 	}
 

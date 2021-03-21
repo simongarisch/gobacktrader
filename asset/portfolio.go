@@ -165,17 +165,17 @@ func (p Portfolio) GetValue() (Price, error) {
 	for _, position := range p.positions {
 		value := position.GetValue()
 		if !value.Valid { // no value, so value and weight invalid
-			return nullPrice, nil
+			return nullValue, nil
 		}
 
 		assetBaseCurrency := position.GetBaseCurrency()
 		pair := assetBaseCurrency + p.baseCurrency
 		fxRate, ok, err := p.fxRates.GetRate(pair)
 		if err != nil {
-			return nullPrice, err
+			return nullValue, err
 		}
 		if !ok { // no fx rate, so value and weight invalid
-			return nullPrice, nil
+			return nullValue, nil
 		}
 
 		totalValueFloat += value.Float64 * fxRate
@@ -187,7 +187,7 @@ func (p Portfolio) GetValue() (Price, error) {
 // GetValueWeights returns the portfolio value along with all position weights.
 func (p *Portfolio) GetValueWeights() (Price, map[IAssetReadOnly]Weight, error) {
 	var totalValueFloat float64
-	portfolioValue := nullPrice
+	portfolioValue := nullValue
 	valid := true
 	positionValues := make(map[IAssetReadOnly]Price)
 	positionWeights := make(map[IAssetReadOnly]Weight)
@@ -201,7 +201,7 @@ func (p *Portfolio) GetValueWeights() (Price, map[IAssetReadOnly]Weight, error) 
 		value := position.GetValue()
 		if !value.Valid { // no value, so value and weight invalid
 			valid = false
-			positionValues[asset] = nullPrice
+			positionValues[asset] = nullValue
 			positionWeights[asset] = nullWeight
 			continue
 		}
@@ -214,7 +214,7 @@ func (p *Portfolio) GetValueWeights() (Price, map[IAssetReadOnly]Weight, error) 
 		}
 		if !ok { // no fx rate, so value and weight invalid
 			valid = false
-			positionValues[asset] = nullPrice
+			positionValues[asset] = nullValue
 			positionWeights[asset] = nullWeight
 			continue
 		}

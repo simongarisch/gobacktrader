@@ -10,13 +10,12 @@ var defaultMultiplier = 1.0
 
 // Asset defines a generic asset type with a ticker, price and value.
 type Asset struct {
-	priceHistory  // embed struct for price history
+	priceHistory // embed struct for price history
 	ticker       string
 	baseCurrency string
 	multiplier   float64
 	value        Price
 }
-
 
 // IAssetReadOnly defines the interface for read only assets.
 // Given these interface methods take a pointer receiver only
@@ -93,7 +92,7 @@ func (a *Asset) GetValue() Price {
 // Revalue revalues our asset.
 func (a *Asset) Revalue() {
 	if !a.price.Valid {
-		a.value = nullPrice
+		a.value = nullValue
 		return
 	}
 

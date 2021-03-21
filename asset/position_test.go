@@ -34,7 +34,7 @@ func TestPositionValue(t *testing.T) {
 	}
 
 	value := position.GetValue() // price not yet set for stock
-	if value != nullPrice {
+	if value != nullValue {
 		t.Error("Expecting an uninitialised value.")
 	}
 

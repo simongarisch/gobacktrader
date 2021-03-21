@@ -19,12 +19,12 @@ func TestNewAsset(t *testing.T) {
 	if asset.GetPrice().Valid {
 		t.Error("Expecting an uninitialised price")
 	}
-	if asset.GetValue() != nullPrice {
+	if asset.GetValue() != nullValue {
 		t.Error("Expecting an invalid value")
 	}
 
 	asset.Revalue() // but we don't have a price yet
-	if asset.GetValue() != nullPrice {
+	if asset.GetValue() != nullValue {
 		t.Error("Expecting an invalid value")
 	}
 

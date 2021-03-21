@@ -35,7 +35,7 @@ func (p *Position) GetAsset() IAssetReadOnly {
 func (p Position) GetValue() Price {
 	assetValue := p.asset.GetValue()
 	if !assetValue.Valid {
-		return nullPrice
+		return nullValue
 	}
 
 	return Price{Float64: assetValue.Float64 * p.units, Valid: true}

@@ -10,13 +10,14 @@ type Price sql.NullFloat64
 
 var (
 	nullPrice = Price{Float64: 0.0, Valid: false}
+	nullValue = Price{Float64: 0.0, Valid: false}
 	unitPrice = Price{Float64: 1.0, Valid: true}
 )
 
 // priceSnapshot defines a snapshot in time for a given price.
 type priceSnapshot struct {
 	timestamp time.Time
-	price Price
+	price     Price
 }
 
 type iHasGetPrice interface {
@@ -25,9 +26,9 @@ type iHasGetPrice interface {
 
 // newPriceSnapshot returns a new instance of priceSnapshot.
 func newPriceSnapshot(timestamp time.Time, a iHasGetPrice) priceSnapshot {
-	return priceSnapshot {
+	return priceSnapshot{
 		timestamp: timestamp,
-		price: a.GetPrice(),
+		price:     a.GetPrice(),
 	}
 }
 
@@ -42,7 +43,7 @@ func (s priceSnapshot) GetPrice() Price {
 }
 
 type priceHistory struct {
-	price Price
+	price   Price
 	history map[time.Time]priceSnapshot
 }
 
