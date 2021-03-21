@@ -3,5 +3,7 @@ language: go
 go:
   - 1.13
 
+install: true
+
 script:
-  - env GO111MODULE=on go test -coverprofile=coverage.txt
+  -  go test -coverprofile=coverage.txt
