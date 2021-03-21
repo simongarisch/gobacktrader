@@ -495,3 +495,172 @@ func TestPortfolioNoFxRate(t *testing.T) {
 		t.Errorf("Expecting a valuation of $400, got %0.2f", value.Float64)
 	}
 }
+
+func TestPortfolioInvalidAsset(t *testing.T) {
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
+
+	// stock has an invalid base currency
+	stock := Asset{
+		ticker:       "ZZB AU",
+		baseCurrency: "AUDX",
+		multiplier:   1.0,
+	}
+
+	stock.SetPrice(Price{Float64: 2.0, Valid: true})
+	p.ModifyPositions(&stock, 100)
+
+	_, err = p.GetValue()
+	errStr := btutil.GetErrorString(err)
+	if errStr != "expecting a six character currency pair, got 'AUDXAUD'" {
+		t.Errorf("Unexpected error string - '%s'", errStr)
+	}
+}
+
+func TestGetValueWeightsError(t *testing.T) {
+	p, err1 := NewPortfolio("XXX", "AUD")
+	cash, err2 := NewCash("AUD")
+	stock, err3 := NewStock("ZZB AU", "AUD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in asset creation - %s", err)
+	}
+
+	// transfer 100 shares of stock and 100 AUD to the portfolio
+	p.ModifyPositions(&stock, 100)
+	p.ModifyPositions(&cash, 100)
+
+	// this stock doesn't yet have a price, so the portfolio
+	// value is invalid.
+	portfolioValue, portfolioWeights, err := p.GetValueWeights()
+	if err != nil {
+		t.Errorf("Error in GetValueWeights - %s", err)
+	}
+	if portfolioValue != nullPrice {
+		t.Error("Expecting an invalid portfolio value.")
+	}
+	weight, ok := portfolioWeights[&stock]
+	if !ok {
+		t.Error("Expecting a weight record for this stock.")
+	}
+	if weight != nullWeight {
+		t.Error("Expecting an invalid weight for this stock.")
+	}
+
+	// if we set the stock price then we'll get a valid
+	// value and weights.
+	stock.SetPrice(Price{Float64: 1.0, Valid: true})
+	portfolioValue, portfolioWeights, err = p.GetValueWeights()
+	if err != nil {
+		t.Errorf("Error in GetValueWeights - %s", err)
+	}
+	if !portfolioValue.Valid {
+		t.Error("Expecting a valid portfolio value.")
+	}
+	if portfolioValue.Float64 != 200.0 {
+		t.Errorf("Expecting a portfolio value of $200, got $%0.2f", portfolioValue.Float64)
+	}
+	wCash, _ := portfolioWeights[&cash]
+	wStock, _ := portfolioWeights[&stock]
+	if wCash.Float64 != 0.5 {
+		t.Errorf("Expecting a cash weight of 0.5, got %0.2f", wCash.Float64)
+	}
+	if wStock.Float64 != 0.5 {
+		t.Errorf("Expecing a stock weight of 0.5, got %0.2f", wStock.Float64)
+	}
+
+	// add a stock with an invalid currency code.
+	// this will throw an error
+	badStock := Asset{
+		ticker:       "ZZB AU",
+		baseCurrency: "AUDX",
+		multiplier:   1.0,
+	}
+	badStock.SetPrice(Price{Float64: 1.0, Valid: true})
+	p.ModifyPositions(&badStock, 100)
+
+	_, _, err = p.GetValueWeights()
+	errStr := btutil.GetErrorString(err)
+	if errStr != "expecting a six character currency pair, got 'AUDXAUD'" {
+		t.Errorf("Unexpected error string, got '%s'", errStr)
+	}
+
+	// finally, we'll get an invalid value where an fx rate is not available.
+	stock2, err := NewStock("ZZB US", "USD")
+	if err != nil {
+		t.Errorf("Error in NewStock - %s", err)
+	}
+	p.ModifyPositions(&badStock, -100)
+	p.ModifyPositions(&stock2, 100)
+	stock2.SetPrice(Price{Float64: 1.0, Valid: true})
+
+	// we don't have an fx rate to value stock2
+	// the portfolio value will be invalid
+	portfolioValue, _, err = p.GetValueWeights()
+	if err != nil {
+		t.Errorf("Error in GetValueWeights - %s", err)
+	}
+	if portfolioValue != nullPrice {
+		t.Error("Expecting an invalid value for this portfolio.")
+	}
+
+	fxRates := FxRates{}
+	audusd, err := NewFxRate("AUDUSD", Price{Float64: 0.8, Valid: true})
+	if err != nil {
+		t.Errorf("Error in NewFxRate - %s", err)
+	}
+
+	fxRates.Register(&audusd)
+	p.SetFxRates(&fxRates)
+
+	// positions should now be as follows
+	// $100 in AUD cash
+	// 100 shares of stock at $1 AUD each, $100 AUD in total
+	// zero shares in badStock so this shouldn't cause an issue
+	// 100 shares in stock2 at $1 USD each, 100 / 0.8 = $125 AUD worth
+	// total portfolio value = 325
+	// weights are 30.77%, 30.77%, 38.46%
+	portfolioValue, portfolioWeights, err = p.GetValueWeights()
+	if err != nil {
+		t.Errorf("Error in GetValueWeights - %s", err)
+	}
+	if !portfolioValue.Valid {
+		t.Error("Expecting a valid portfolio value.")
+	}
+	if portfolioValue.Float64 != 325 {
+		t.Errorf("Unexpected portfolio value: wanted $325 got $%0.2f", portfolioValue.Float64)
+	}
+	wCash, _ = portfolioWeights[&cash]
+	wStock, _ = portfolioWeights[&stock]
+	wStock2, _ := portfolioWeights[&stock2]
+	wCashFloat := btutil.Round4dp(wCash.Float64)
+	wStockFloat := btutil.Round4dp(wStock.Float64)
+	wStock2Float := btutil.Round4dp(wStock2.Float64)
+
+	if wCashFloat != 0.3077 {
+		t.Errorf("Expecting a cash weight of 0.3077, got %0.4f", wCashFloat)
+	}
+	if wStockFloat != 0.3077 {
+		t.Errorf("Expecting a stock weight of 0.3077, got %0.4f", wStockFloat)
+	}
+	if wStock2Float != 0.3846 {
+		t.Errorf("Expecting a stock2 weight of 0.3846, got %0.4f", wStockFloat)
+	}
+}
+
+func TestNewPortfolioSnapshotError(t *testing.T) {
+	p, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
+
+	t1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
+	// we cannot get weights from a portfolio with zero value.
+
+	err = p.TakeSnapshot(t1)
+	errStr := btutil.GetErrorString(err)
+	if errStr != "cannot calculate weights for portfolio with zero value" {
+		t.Errorf("Unexpected error string, got '%s'", errStr)
+	}
+}

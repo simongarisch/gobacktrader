@@ -193,6 +193,10 @@ func (p *Portfolio) GetValueWeights() (Price, map[IAssetReadOnly]Weight, error) 
 	positionWeights := make(map[IAssetReadOnly]Weight)
 
 	for _, position := range p.positions {
+		units := position.GetUnits()
+		if units == 0 {
+			continue // nothing to value.
+		}
 		asset := position.GetAsset()
 		value := position.GetValue()
 		if !value.Valid { // no value, so value and weight invalid
