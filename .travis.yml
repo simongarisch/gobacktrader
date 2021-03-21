@@ -3,6 +3,9 @@ language: go
 go:
   - 1.13
 
+env:
+  - GO111MODULE=on
+
 dist: trusty
 
 install: true
