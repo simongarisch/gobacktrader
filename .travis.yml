@@ -13,4 +13,4 @@ dist: trusty
 install: true
 
 script:
-  -  go test ./...
+  -  go test ./... -coverprofile=coverage.out
