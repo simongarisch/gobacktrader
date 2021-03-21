@@ -460,3 +460,38 @@ func TestPortfolioSnapshots(t *testing.T) {
 		t.Errorf("Unexpected cash weight: wanted 0.25, got %0.2f", wCash.Float64)
 	}
 }
+
+func TestPortfolioNoFxRate(t *testing.T) {
+	p, err1 := NewPortfolio("XXX", "AUD")
+	stock, err2 := NewStock("ZZA US", "USD")
+	audusd, err3 := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in asset creation - %s", err)
+	}
+
+	stock.SetPrice(Price{Float64: 3.0, Valid: true})
+	fxRates := FxRates{}
+	fxRates.Register(&audusd)
+
+	// transfer 100 shares of stock
+	// note the portfolio fx rates is currently empty
+	p.ModifyPositions(&stock, 100)
+
+	value, err := p.GetValue()
+	if err != nil {
+		t.Errorf("Error in portfolio.GetValue - %s", err)
+	}
+	if value != nullPrice {
+		t.Error("Expecting a null price with no FX rate for valuation.")
+	}
+
+	// set the fx rates so we can get a valuation
+	p.SetFxRates(&fxRates)
+	value, err = p.GetValue()
+	if err != nil {
+		t.Errorf("Error in portfolio.GetValue - %s", err)
+	}
+	if value.Float64 != 400 { // 300 / 0.75 = 400
+		t.Errorf("Expecting a valuation of $400, got %0.2f", value.Float64)
+	}
+}

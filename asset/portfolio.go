@@ -90,10 +90,12 @@ func NewPortfolio(code string, baseCurrency string) (Portfolio, error) {
 	positions := make(map[IAssetReadOnly]*Position)
 	history := make(map[time.Time]PortfolioSnapshot)
 	baseCurrency, err := ValidateCurrency(baseCurrency)
+	fxRates := &FxRates{}
 	portfolio := Portfolio{
 		code:         code,
 		baseCurrency: baseCurrency,
 		positions:    positions,
+		fxRates:      fxRates,
 		history:      history,
 	}
 	return portfolio, err
