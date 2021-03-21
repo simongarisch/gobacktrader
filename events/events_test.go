@@ -1,6 +1,7 @@
 package events
 
 import (
+	"gobacktrader/btutil"
 	"testing"
 	"time"
 )
@@ -31,6 +32,9 @@ func TestEventsLen(t *testing.T) {
 	if events.Len() != 0 {
 		t.Error("Expecting a new events collection to be empty.")
 	}
+	if !events.IsEmpty() {
+		t.Error("Expecting a new events collection to be empty.")
+	}
 
 	eventTime1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
 	eventTime2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
@@ -59,6 +63,20 @@ func TestEventsLen(t *testing.T) {
 
 func TestEventsAddGet(t *testing.T) {
 	events := NewEvents()
+	if !events.IsEmpty() {
+		t.Error("Expecting a new events collection to be empty.")
+	}
+
+	// we cannot get an event if events is empty
+	event, err := events.Get()
+	errStr := btutil.GetErrorString(err)
+	if errStr != "the events list is empty" {
+		t.Errorf("Unexpected error string, got '%s'", errStr)
+	}
+	if event != nil {
+		t.Error("Expecting no event to be passed back.")
+	}
+
 	time1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
 	time2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
 	time3 := time.Date(2020, time.December, 16, 0, 0, 0, 0, time.UTC)
