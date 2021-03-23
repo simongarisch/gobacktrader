@@ -5,7 +5,7 @@ import (
 	"gobacktrader/asset"
 )
 
-// IComplianceRule defines the compliance rule interface
+// IComplianceRule defines the compliance rule interface.
 type IComplianceRule interface {
 	GetPortfolio() *asset.Portfolio
 	Passes() (bool, error)
