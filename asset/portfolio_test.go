@@ -528,8 +528,8 @@ func TestGetValueWeightsError(t *testing.T) {
 	}
 
 	// transfer 100 shares of stock and 100 AUD to the portfolio
-	p.ModifyPositions(&stock, 100)
-	p.ModifyPositions(&cash, 100)
+	p.Transfer(&stock, 100)
+	p.Transfer(&cash, 100)
 
 	// this stock doesn't yet have a price, so the portfolio
 	// value is invalid.

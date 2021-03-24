@@ -158,6 +158,12 @@ func (p *Portfolio) ModifyPositions(a IAssetReadOnly, units float64) {
 	}
 }
 
+// Transfer has identical functionality to ModifyPositions
+// and will increment or decrement some asset in the portfolio.
+func (p *Portfolio) Transfer(a IAssetReadOnly, units float64) {
+	p.ModifyPositions(a, units)
+}
+
 // GetValue returns our portfolio value.
 func (p Portfolio) GetValue() (Price, error) {
 	var totalValueFloat float64
