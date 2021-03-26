@@ -265,3 +265,16 @@ func (p *Portfolio) TakeSnapshot(timestamp time.Time) error {
 func (p Portfolio) GetHistory() map[time.Time]PortfolioSnapshot {
 	return p.history
 }
+
+// Copy returns a copy of the portfolio ex history.
+func (p *Portfolio) Copy() (Portfolio, error) {
+	portfolioCopy, err := NewPortfolio(p.GetCode(), p.GetBaseCurrency())
+	if err != nil {
+		return portfolioCopy, err
+	}
+
+	for asset, position := range p.positions {
+		portfolioCopy.Transfer(asset, position.GetUnits())
+	}
+	return portfolioCopy, nil
+}

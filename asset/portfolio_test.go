@@ -664,3 +664,43 @@ func TestNewPortfolioSnapshotError(t *testing.T) {
 		t.Errorf("Unexpected error string, got '%s'", errStr)
 	}
 }
+
+func TestPortfolioCopy(t *testing.T) {
+	portfolio, err1 := NewPortfolio("XXX", "AUD")
+	stock1, err2 := NewStock("ZZA AU", "AUD")
+	stock2, err3 := NewStock("ZZB AU", "AUD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in asset init - %s", err)
+	}
+
+	portfolio.ModifyPositions(&stock1, 100)
+	portfolio.ModifyPositions(&stock2, 200)
+	if portfolio.GetUnits(&stock1) != 100 {
+		t.Error("Unexpected units in stock1")
+	}
+	if portfolio.GetUnits(&stock2) != 200 {
+		t.Error("Unexpected units in stock2")
+	}
+
+	// modify a portfolio copy and check this
+	// has no impact on our portfolio.
+	portfolioCopy, err := portfolio.Copy()
+	if err != nil {
+		t.Errorf("Error in portfolio.Copy() - %s", err)
+	}
+
+	portfolioCopy.ModifyPositions(&stock1, -50)
+	portfolioCopy.ModifyPositions(&stock2, -50)
+	if portfolioCopy.GetUnits(&stock1) != 50 {
+		t.Error("Unexpected units in stock1")
+	}
+	if portfolioCopy.GetUnits(&stock2) != 150 {
+		t.Error("Unexpected units in stock2")
+	}
+	if portfolio.GetUnits(&stock1) != 100 {
+		t.Error("Unexpected units in stock1")
+	}
+	if portfolio.GetUnits(&stock2) != 200 {
+		t.Error("Unexpected units in stock2")
+	}
+}
