@@ -14,6 +14,12 @@ type Weight sql.NullFloat64
 
 var nullWeight = Weight{Float64: 0.0, Valid: false}
 
+// IComplianceRule defines the compliance rule interface.
+type IComplianceRule interface {
+	GetPortfolio() *Portfolio
+	Passes() (bool, error)
+}
+
 // PortfolioSnapshot takes a snapshot of portfolio value and weights
 // for a specific timestamp.
 type PortfolioSnapshot struct {

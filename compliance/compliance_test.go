@@ -1,9 +1,9 @@
 package compliance
 
 import (
+	"errors"
 	"gobacktrader/asset"
 	"gobacktrader/btutil"
-	"errors"
 	"testing"
 )
 
@@ -11,7 +11,7 @@ type testRule struct {
 	portfolio *asset.Portfolio
 }
 
-func (t *testRule) GetPortfolio() (*asset.Portfolio) {
+func (t *testRule) GetPortfolio() *asset.Portfolio {
 	return t.portfolio
 }
 
@@ -35,7 +35,7 @@ func TestCompliance(t *testing.T) {
 	stockUnitLimit := NewUnitLimit(&portfolio, &stock, 100)
 
 	rules := NewRules(&portfolio)
-	for _, rule := range []IComplianceRule{&cashUnitLimit, &stockUnitLimit} {
+	for _, rule := range []asset.IComplianceRule{&cashUnitLimit, &stockUnitLimit} {
 		rules.AddRule(rule)
 	}
 
@@ -83,7 +83,7 @@ func TestComplianceWrongPortfolio(t *testing.T) {
 	stockUnitLimit2 := NewUnitLimit(&portfolio2, &stock, 100)
 
 	rules := NewRules(&portfolio1)
-	for _, rule := range []IComplianceRule{&cashUnitLimit, &stockUnitLimit1, &stockUnitLimit2} {
+	for _, rule := range []asset.IComplianceRule{&cashUnitLimit, &stockUnitLimit1, &stockUnitLimit2} {
 		err := rules.AddRule(rule)
 		if rule == &stockUnitLimit2 {
 			if btutil.GetErrorString(err) != "compliance rule relates to a different portfolio" {

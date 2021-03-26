@@ -5,16 +5,10 @@ import (
 	"gobacktrader/asset"
 )
 
-// IComplianceRule defines the compliance rule interface.
-type IComplianceRule interface {
-	GetPortfolio() *asset.Portfolio
-	Passes() (bool, error)
-}
-
 // Rules represents a collection of compliance rules
 // to be applied to some portfolio.
 type Rules struct {
-	rules     []IComplianceRule
+	rules     []asset.IComplianceRule
 	portfolio *asset.Portfolio
 }
 
@@ -32,7 +26,7 @@ func (r *Rules) GetPortfolio() *asset.Portfolio {
 }
 
 // AddRule adds a compliance rule to the compliance rules collection.
-func (r *Rules) AddRule(rule IComplianceRule) error {
+func (r *Rules) AddRule(rule asset.IComplianceRule) error {
 	if rule.GetPortfolio() != r.portfolio {
 		return errors.New("compliance rule relates to a different portfolio")
 	}
