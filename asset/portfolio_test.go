@@ -704,3 +704,100 @@ func TestPortfolioCopy(t *testing.T) {
 		t.Error("Unexpected units in stock2")
 	}
 }
+
+func TestPortfolioCopyError(t *testing.T) {
+	portfolio := Portfolio{
+		code:         "XXX",
+		baseCurrency: "AUDX",
+	}
+
+	_, err := portfolio.Copy()
+	errStr := btutil.GetErrorString(err)
+	if errStr != "'AUDX' is not a valid currency code" {
+		t.Errorf("Unexpected error string - '%s'", err)
+	}
+}
+
+type testRule struct {
+	portfolio *Portfolio
+}
+
+func (t *testRule) GetPortfolio() *Portfolio {
+	return t.portfolio
+}
+
+func (t *testRule) Passes() (bool, error) {
+	return true, nil
+}
+
+func TestPortfolioCompliance(t *testing.T) {
+	portfolio, err := NewPortfolio("XXX", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
+
+	r1 := testRule{portfolio: &portfolio}
+	r2 := testRule{portfolio: &portfolio}
+	if portfolio.HasComplianceRule(&r1) {
+		t.Error("Rule 1 has not been added to portfolio")
+	}
+	if portfolio.HasComplianceRule(&r2) {
+		t.Error("Rule 2 has not been added to portfolio")
+	}
+
+	err1 := portfolio.AddComplianceRule(&r1)
+	err2 := portfolio.AddComplianceRule(&r1)
+	if btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in AddComplianceRule - %s", err)
+	}
+	if !portfolio.HasComplianceRule(&r1) {
+		t.Error("Portfolio should have rule 1")
+	}
+	if portfolio.HasComplianceRule(&r2) {
+		t.Error("Rule 2 has not been added to portfolio")
+	}
+
+	err1 = portfolio.AddComplianceRule(&r2)
+	err2 = portfolio.AddComplianceRule(&r2)
+	if btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in AddComplianceRule - %s", err)
+	}
+	if !portfolio.HasComplianceRule(&r1) {
+		t.Error("Portfolio should have rule 1")
+	}
+	if !portfolio.HasComplianceRule(&r2) {
+		t.Error("portfolio should have rule 2")
+	}
+
+	// now remove compliance rule 1 from portfolio
+	err = portfolio.RemoveComplianceRule(&r1)
+	if err != nil {
+		t.Errorf("Error in RemoveComplianceRule - %s", err)
+	}
+	if portfolio.HasComplianceRule(&r1) {
+		t.Error("Portfolio should not have rule 1")
+	}
+	if !portfolio.HasComplianceRule(&r2) {
+		t.Error("portfolio should have rule 2")
+	}
+
+	// trying to remove the same rule again does nothing
+	err = portfolio.RemoveComplianceRule(&r1)
+	if err != nil {
+		t.Errorf("Error in RemoveComplianceRule - %s", err)
+	}
+
+	// if we try to add a rule for the wrong portfolio
+	portfolio2, err := NewPortfolio("YYY", "AUD")
+	if err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
+	err = portfolio2.AddComplianceRule(&r1)
+	if btutil.GetErrorString(err) != "applying to the wrong portfolio" {
+		t.Error("Unexpected error string")
+	}
+	err = portfolio2.RemoveComplianceRule(&r1)
+	if btutil.GetErrorString(err) != "applying to the wrong portfolio" {
+		t.Error("Unexpected error string")
+	}
+}

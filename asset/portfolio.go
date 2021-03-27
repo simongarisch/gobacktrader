@@ -12,7 +12,10 @@ import (
 // Weight represents an asset weight for a given portfolio.
 type Weight sql.NullFloat64
 
-var nullWeight = Weight{Float64: 0.0, Valid: false}
+var (
+	nullWeight        = Weight{Float64: 0.0, Valid: false}
+	errWrongPortfolio = errors.New("applying to the wrong portfolio")
+)
 
 // IComplianceRule defines the compliance rule interface.
 type IComplianceRule interface {
@@ -55,11 +58,12 @@ func (s PortfolioSnapshot) GetWeights() map[IAssetReadOnly]Weight {
 
 // Portfolio consists of a collection of positions.
 type Portfolio struct {
-	code         string
-	baseCurrency string
-	positions    map[IAssetReadOnly]*Position
-	fxRates      *FxRates
-	history      map[time.Time]PortfolioSnapshot
+	code            string
+	baseCurrency    string
+	positions       map[IAssetReadOnly]*Position
+	fxRates         *FxRates
+	history         map[time.Time]PortfolioSnapshot
+	complianceRules []IComplianceRule
 }
 
 // Show will print and return a string representation
@@ -283,4 +287,46 @@ func (p *Portfolio) Copy() (Portfolio, error) {
 		portfolioCopy.Transfer(asset, position.GetUnits())
 	}
 	return portfolioCopy, nil
+}
+
+// HasComplianceRule returns true if a portfolio has some
+// compliance rule, false otherwise.
+func (p *Portfolio) HasComplianceRule(rule IComplianceRule) bool {
+	for _, portfolioRule := range p.complianceRules {
+		if rule == portfolioRule {
+			return true
+		}
+	}
+	return false
+}
+
+// AddComplianceRule adds a compliance rule to the portfolio.
+func (p *Portfolio) AddComplianceRule(rule IComplianceRule) error {
+	if rule.GetPortfolio() != p {
+		return errWrongPortfolio
+	}
+	if p.HasComplianceRule(rule) {
+		return nil
+	}
+	p.complianceRules = append(p.complianceRules, rule)
+	return nil
+}
+
+// RemoveComplianceRule removes a compliance rule from the portfolio.
+func (p *Portfolio) RemoveComplianceRule(rule IComplianceRule) error {
+	if rule.GetPortfolio() != p {
+		return errWrongPortfolio
+	}
+	if !p.HasComplianceRule(rule) {
+		return nil
+	}
+	var newRules []IComplianceRule
+	for _, portfolioRule := range p.complianceRules {
+		if portfolioRule != rule {
+			newRules = append(newRules, portfolioRule)
+		}
+	}
+
+	p.complianceRules = newRules
+	return nil
 }
