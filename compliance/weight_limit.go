@@ -14,11 +14,13 @@ type WeightLimit struct {
 
 // NewWeightLimit returns a new instance of WeightLimit
 func NewWeightLimit(portfolio *asset.Portfolio, targetAsset asset.IAssetReadOnly, limit float64) WeightLimit {
-	return WeightLimit{
+	weightLimit := WeightLimit{
 		portfolio:   portfolio,
 		targetAsset: targetAsset,
 		limit:       limit,
 	}
+	portfolio.AddComplianceRule(&weightLimit)
+	return weightLimit
 }
 
 // GetPortfolio returns the portfolio for which this limit is applied.

@@ -11,11 +11,13 @@ type UnitLimit struct {
 
 // NewUnitLimit returns a new instance of UnitLimit.
 func NewUnitLimit(portfolio *asset.Portfolio, targetAsset asset.IAssetReadOnly, limit float64) UnitLimit {
-	return UnitLimit{
+	unitLimit := UnitLimit{
 		portfolio:   portfolio,
 		targetAsset: targetAsset,
 		limit:       limit,
 	}
+	portfolio.AddComplianceRule(&unitLimit)
+	return unitLimit
 }
 
 // GetPortfolio returns the portfolio for which this limit is applied.
