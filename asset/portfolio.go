@@ -330,3 +330,19 @@ func (p *Portfolio) RemoveComplianceRule(rule IComplianceRule) error {
 	p.complianceRules = newRules
 	return nil
 }
+
+// PassesCompliance returns true if all compliance rules pass,
+// false otherwise.
+func (p *Portfolio) PassesCompliance() (bool, error) {
+	allPasses := true
+	for _, rule := range p.complianceRules {
+		rulePasses, err := rule.Passes()
+		if err != nil {
+			return allPasses, err
+		}
+		if !rulePasses {
+			allPasses = false
+		}
+	}
+	return allPasses, nil
+}
