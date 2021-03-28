@@ -901,11 +901,26 @@ func TestPassesCompliance(t *testing.T) {
 		t.Error("rule should exist for this portfolio")
 	}
 
-	// finally, adding a compliance rule to the wrong portfolio
+	// adding a compliance rule to the wrong portfolio
 	// should throw an error
 	err = portfolio2.AddComplianceRule(&r1)
 	errStr := btutil.GetErrorString(err)
 	if errStr != "applying to the wrong portfolio" {
+		t.Errorf("Unexpected error string - %s", err)
+	}
+
+	// some compliance rules may throw an error
+	r5 := errorRule{rule: rule{portfolio: &portfolio1}}
+	err = portfolio1.AddComplianceRule(&r5)
+	if err != nil {
+		t.Errorf("Error in AddComplianceRule - %s", err)
+	}
+	pass, err := portfolio1.PassesCompliance()
+	if pass {
+		t.Errorf("Compliance should fail where rules throw an error")
+	}
+	errStr = btutil.GetErrorString(err)
+	if errStr != "this rule throws an error" {
 		t.Errorf("Unexpected error string - %s", err)
 	}
 }

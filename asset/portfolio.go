@@ -338,7 +338,7 @@ func (p *Portfolio) PassesCompliance() (bool, error) {
 	for _, rule := range p.complianceRules {
 		rulePasses, err := rule.Passes()
 		if err != nil {
-			return allPasses, err
+			return false, err
 		}
 		if !rulePasses {
 			allPasses = false
