@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"errors"
 	"gobacktrader/btutil"
 	"testing"
 	"time"
@@ -799,5 +800,112 @@ func TestPortfolioCompliance(t *testing.T) {
 	err = portfolio2.RemoveComplianceRule(&r1)
 	if btutil.GetErrorString(err) != "applying to the wrong portfolio" {
 		t.Error("Unexpected error string")
+	}
+}
+
+type rule struct {
+	portfolio *Portfolio
+}
+
+func (r *rule) GetPortfolio() *Portfolio {
+	return r.portfolio
+}
+
+type passingRule struct {
+	rule
+}
+
+func (r *passingRule) Passes() (bool, error) {
+	return true, nil
+}
+
+type failingRule struct {
+	rule
+}
+
+func (r *failingRule) Passes() (bool, error) {
+	return false, nil
+}
+
+type errorRule struct {
+	rule
+}
+
+func (r *errorRule) Passes() (bool, error) {
+	return true, errors.New("this rule throws an error")
+}
+
+func TestPassesCompliance(t *testing.T) {
+	portfolio1, err1 := NewPortfolio("XXX", "AUD")
+	portfolio2, err2 := NewPortfolio("YYY", "AUD")
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in NewPortfolio - %s", err)
+	}
+
+	// compliance should pass where there are no rules.
+	for _, portfolio := range []Portfolio{portfolio1, portfolio2} {
+		pass, err := portfolio.PassesCompliance()
+		if err != nil {
+			t.Error("Error in PassesCompliance")
+		}
+		if !pass {
+			t.Error("Compliance should pass with no rule in place")
+		}
+	}
+
+	// add a passing rule to portfolio1 and a
+	// failing rule to portfolio2
+	r1 := passingRule{rule: rule{portfolio: &portfolio1}}
+	r2 := failingRule{rule: rule{portfolio: &portfolio2}}
+	err1 = portfolio1.AddComplianceRule(&r1)
+	err2 = portfolio2.AddComplianceRule(&r2)
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in AddComplianceRule - %s", err)
+	}
+	if pass, _ := portfolio1.PassesCompliance(); !pass {
+		t.Error("portfolio1 should pass compliance")
+	}
+	if pass, _ := portfolio2.PassesCompliance(); pass {
+		t.Error("portfolio2 should fail compliance")
+	}
+
+	// now do the opposite, both should now fail
+	// as each has both a passing rule and a failing rule.
+	r3 := failingRule{rule: rule{portfolio: &portfolio1}}
+	r4 := passingRule{rule: rule{portfolio: &portfolio2}}
+	err1 = portfolio1.AddComplianceRule(&r3)
+	err2 = portfolio2.AddComplianceRule(&r4)
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in AddComplianceRule - %s", err)
+	}
+	if pass, _ := portfolio1.PassesCompliance(); pass {
+		t.Error("portfolio1 should fail compliance")
+	}
+	if pass, _ := portfolio2.PassesCompliance(); pass {
+		t.Error("portfolio2 should fail compliance")
+	}
+
+	// removing r3 should cause portfolio1 to pass
+	err := portfolio1.RemoveComplianceRule(&r3)
+	if err != nil {
+		t.Errorf("Error in RemoveComplianceRule - %s", err)
+	}
+	if pass, _ := portfolio1.PassesCompliance(); !pass {
+		t.Error("portfolio1 should pass compliance")
+	}
+
+	if hasRule := portfolio1.HasComplianceRule(&r3); hasRule {
+		t.Error("rule shouldn't exist as it has been removed")
+	}
+	if hasRule := portfolio1.HasComplianceRule(&r1); !hasRule {
+		t.Error("rule should exist for this portfolio")
+	}
+
+	// finally, adding a compliance rule to the wrong portfolio
+	// should throw an error
+	err = portfolio2.AddComplianceRule(&r1)
+	errStr := btutil.GetErrorString(err)
+	if errStr != "applying to the wrong portfolio" {
+		t.Errorf("Unexpected error string - %s", err)
 	}
 }
