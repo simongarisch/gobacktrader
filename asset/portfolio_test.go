@@ -683,6 +683,8 @@ func TestPortfolioCopy(t *testing.T) {
 		t.Error("Unexpected units in stock2")
 	}
 
+	rule := testRule{}
+	portfolio.AddComplianceRule(&rule)
 	// modify a portfolio copy and check this
 	// has no impact on our portfolio.
 	portfolioCopy, err := portfolio.Copy()
@@ -704,6 +706,11 @@ func TestPortfolioCopy(t *testing.T) {
 	if portfolio.GetUnits(&stock2) != 200 {
 		t.Error("Unexpected units in stock2")
 	}
+
+	// check that compliance rules are copied over
+	if !portfolioCopy.HasComplianceRule(&rule) {
+		t.Error("Expecting compliance rule to be copied")
+	}
 }
 
 func TestPortfolioCopyError(t *testing.T) {
@@ -720,14 +727,10 @@ func TestPortfolioCopyError(t *testing.T) {
 }
 
 type testRule struct {
-	portfolio *Portfolio
+	name string // see notes 'Pointer to empty structs'
 }
 
-func (t *testRule) GetPortfolio() *Portfolio {
-	return t.portfolio
-}
-
-func (t *testRule) Passes() (bool, error) {
+func (t *testRule) Passes(portfolio *Portfolio) (bool, error) {
 	return true, nil
 }
 
@@ -737,8 +740,8 @@ func TestPortfolioCompliance(t *testing.T) {
 		t.Errorf("Error in NewPortfolio - %s", err)
 	}
 
-	r1 := testRule{portfolio: &portfolio}
-	r2 := testRule{portfolio: &portfolio}
+	r1 := testRule{}
+	r2 := testRule{}
 	if portfolio.HasComplianceRule(&r1) {
 		t.Error("Rule 1 has not been added to portfolio")
 	}
@@ -787,51 +790,29 @@ func TestPortfolioCompliance(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in RemoveComplianceRule - %s", err)
 	}
-
-	// if we try to add a rule for the wrong portfolio
-	portfolio2, err := NewPortfolio("YYY", "AUD")
-	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
-	}
-	err = portfolio2.AddComplianceRule(&r1)
-	if btutil.GetErrorString(err) != "applying to the wrong portfolio" {
-		t.Error("Unexpected error string")
-	}
-	err = portfolio2.RemoveComplianceRule(&r1)
-	if btutil.GetErrorString(err) != "applying to the wrong portfolio" {
-		t.Error("Unexpected error string")
-	}
-}
-
-type rule struct {
-	portfolio *Portfolio
-}
-
-func (r *rule) GetPortfolio() *Portfolio {
-	return r.portfolio
 }
 
 type passingRule struct {
-	rule
+	name string
 }
 
-func (r *passingRule) Passes() (bool, error) {
+func (r *passingRule) Passes(portfolio *Portfolio) (bool, error) {
 	return true, nil
 }
 
 type failingRule struct {
-	rule
+	name string
 }
 
-func (r *failingRule) Passes() (bool, error) {
+func (r *failingRule) Passes(portfolio *Portfolio) (bool, error) {
 	return false, nil
 }
 
 type errorRule struct {
-	rule
+	name string
 }
 
-func (r *errorRule) Passes() (bool, error) {
+func (r *errorRule) Passes(portfolio *Portfolio) (bool, error) {
 	return true, errors.New("this rule throws an error")
 }
 
@@ -855,8 +836,8 @@ func TestPassesCompliance(t *testing.T) {
 
 	// add a passing rule to portfolio1 and a
 	// failing rule to portfolio2
-	r1 := passingRule{rule: rule{portfolio: &portfolio1}}
-	r2 := failingRule{rule: rule{portfolio: &portfolio2}}
+	r1 := passingRule{}
+	r2 := failingRule{}
 	err1 = portfolio1.AddComplianceRule(&r1)
 	err2 = portfolio2.AddComplianceRule(&r2)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
@@ -871,8 +852,8 @@ func TestPassesCompliance(t *testing.T) {
 
 	// now do the opposite, both should now fail
 	// as each has both a passing rule and a failing rule.
-	r3 := failingRule{rule: rule{portfolio: &portfolio1}}
-	r4 := passingRule{rule: rule{portfolio: &portfolio2}}
+	r3 := failingRule{}
+	r4 := passingRule{}
 	err1 = portfolio1.AddComplianceRule(&r3)
 	err2 = portfolio2.AddComplianceRule(&r4)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
@@ -901,16 +882,8 @@ func TestPassesCompliance(t *testing.T) {
 		t.Error("rule should exist for this portfolio")
 	}
 
-	// adding a compliance rule to the wrong portfolio
-	// should throw an error
-	err = portfolio2.AddComplianceRule(&r1)
-	errStr := btutil.GetErrorString(err)
-	if errStr != "applying to the wrong portfolio" {
-		t.Errorf("Unexpected error string - %s", err)
-	}
-
 	// some compliance rules may throw an error
-	r5 := errorRule{rule: rule{portfolio: &portfolio1}}
+	r5 := errorRule{}
 	err = portfolio1.AddComplianceRule(&r5)
 	if err != nil {
 		t.Errorf("Error in AddComplianceRule - %s", err)
@@ -919,7 +892,7 @@ func TestPassesCompliance(t *testing.T) {
 	if pass {
 		t.Errorf("Compliance should fail where rules throw an error")
 	}
-	errStr = btutil.GetErrorString(err)
+	errStr := btutil.GetErrorString(err)
 	if errStr != "this rule throws an error" {
 		t.Errorf("Unexpected error string - %s", err)
 	}

@@ -19,8 +19,7 @@ var (
 
 // IComplianceRule defines the compliance rule interface.
 type IComplianceRule interface {
-	GetPortfolio() *Portfolio
-	Passes() (bool, error)
+	Passes(*Portfolio) (bool, error)
 }
 
 // PortfolioSnapshot takes a snapshot of portfolio value and weights
@@ -260,6 +259,11 @@ func (p *Portfolio) SetFxRates(fxRates *FxRates) {
 	p.fxRates = fxRates
 }
 
+// GetFxRates returns the FX rates object for this portfolio
+func (p *Portfolio) GetFxRates() *FxRates {
+	return p.fxRates
+}
+
 // TakeSnapshot takes a portfolio snapshot for a given timestamp.
 func (p *Portfolio) TakeSnapshot(timestamp time.Time) error {
 	snap, err := newPortfolioSnapshot(timestamp, p)
@@ -283,9 +287,19 @@ func (p *Portfolio) Copy() (Portfolio, error) {
 		return portfolioCopy, err
 	}
 
+	// copy over positions
 	for asset, position := range p.positions {
 		portfolioCopy.Transfer(asset, position.GetUnits())
 	}
+
+	// fx rates
+	portfolioCopy.SetFxRates(p.GetFxRates())
+
+	// and any compliance rules
+	for _, rule := range p.complianceRules {
+		portfolioCopy.AddComplianceRule(rule)
+	}
+
 	return portfolioCopy, nil
 }
 
@@ -302,9 +316,6 @@ func (p *Portfolio) HasComplianceRule(rule IComplianceRule) bool {
 
 // AddComplianceRule adds a compliance rule to the portfolio.
 func (p *Portfolio) AddComplianceRule(rule IComplianceRule) error {
-	if rule.GetPortfolio() != p {
-		return errWrongPortfolio
-	}
 	if p.HasComplianceRule(rule) {
 		return nil
 	}
@@ -314,9 +325,6 @@ func (p *Portfolio) AddComplianceRule(rule IComplianceRule) error {
 
 // RemoveComplianceRule removes a compliance rule from the portfolio.
 func (p *Portfolio) RemoveComplianceRule(rule IComplianceRule) error {
-	if rule.GetPortfolio() != p {
-		return errWrongPortfolio
-	}
 	if !p.HasComplianceRule(rule) {
 		return nil
 	}
@@ -336,7 +344,7 @@ func (p *Portfolio) RemoveComplianceRule(rule IComplianceRule) error {
 func (p *Portfolio) PassesCompliance() (bool, error) {
 	allPasses := true
 	for _, rule := range p.complianceRules {
-		rulePasses, err := rule.Passes()
+		rulePasses, err := rule.Passes(p)
 		if err != nil {
 			return false, err
 		}

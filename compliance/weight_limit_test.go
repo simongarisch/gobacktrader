@@ -14,13 +14,13 @@ func TestWeightLimit(t *testing.T) {
 		t.Errorf("Error in asset creation - %s", err)
 	}
 
-	cashLimit := NewWeightLimit(&portfolio, &cash, 0.5)
-	stockLimit := NewWeightLimit(&portfolio, &stock, 0.6)
+	cashLimit := NewWeightLimit(&cash, 0.5)
+	stockLimit := NewWeightLimit(&stock, 0.6)
 
-	if cashLimit.GetPortfolio() != &portfolio {
-		t.Error("Unexpected portfolio")
-	}
 	if cashLimit.GetAsset() != &cash {
+		t.Error("Unexpected asset")
+	}
+	if stockLimit.GetAsset() != &stock {
 		t.Error("Unexpected asset")
 	}
 	if cashLimit.GetLimit() != 0.5 {
@@ -32,7 +32,7 @@ func TestWeightLimit(t *testing.T) {
 
 	// the portfolio will currently have a zero value
 	// so we cannot calculate portfolio weights.
-	cashPasses, err := cashLimit.Passes()
+	cashPasses, err := cashLimit.Passes(&portfolio)
 	if cashPasses != false {
 		t.Error("Expecting cash weight limit not to pass")
 	}
@@ -47,7 +47,7 @@ func TestWeightLimit(t *testing.T) {
 
 	// we have transferred assets to the portfolio,
 	// but we still haven't set the price of our stock
-	cashPasses, err = cashLimit.Passes() // weight not valid
+	cashPasses, err = cashLimit.Passes(&portfolio) // weight not valid
 	if cashPasses != false {
 		t.Error("Expecting cash weight limit not to pass")
 	}
@@ -61,8 +61,8 @@ func TestWeightLimit(t *testing.T) {
 	// stock weight = 150 / 250 = 60%
 	// they are both right on their limits and should pass
 	stock.SetPrice(asset.Price{Float64: 1.50, Valid: true})
-	cashPasses, err1 = cashLimit.Passes()
-	stockPasses, err2 := stockLimit.Passes()
+	cashPasses, err1 = cashLimit.Passes(&portfolio)
+	stockPasses, err2 := stockLimit.Passes(&portfolio)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in WeightLimit{}.Passes() - %s", err)
 	}
@@ -76,7 +76,7 @@ func TestWeightLimit(t *testing.T) {
 	// given we are right on our limits adding one share of stock
 	// to the portfolio should cause the stock weight limit to fail.
 	portfolio.ModifyPositions(&stock, 1)
-	stockPasses, err = stockLimit.Passes()
+	stockPasses, err = stockLimit.Passes(&portfolio)
 	if err != nil {
 		t.Errorf("Error in WeightLimit{}.Passes() - %s", err)
 	}

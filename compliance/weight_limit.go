@@ -7,25 +7,17 @@ import (
 
 // WeightLimit places weight limits on our portfolio holdings.
 type WeightLimit struct {
-	portfolio   *asset.Portfolio
 	targetAsset asset.IAssetReadOnly
 	limit       float64
 }
 
 // NewWeightLimit returns a new instance of WeightLimit
-func NewWeightLimit(portfolio *asset.Portfolio, targetAsset asset.IAssetReadOnly, limit float64) WeightLimit {
+func NewWeightLimit(targetAsset asset.IAssetReadOnly, limit float64) WeightLimit {
 	weightLimit := WeightLimit{
-		portfolio:   portfolio,
 		targetAsset: targetAsset,
 		limit:       limit,
 	}
-	portfolio.AddComplianceRule(&weightLimit)
 	return weightLimit
-}
-
-// GetPortfolio returns the portfolio for which this limit is applied.
-func (r *WeightLimit) GetPortfolio() *asset.Portfolio {
-	return r.portfolio
 }
 
 // GetAsset returns the asset for which this limit is applied.
@@ -39,8 +31,8 @@ func (r *WeightLimit) GetLimit() float64 {
 }
 
 // Passes returns true if the WeightLimit rule passes, false otherwise.
-func (r *WeightLimit) Passes() (bool, error) {
-	weight, err := r.portfolio.GetWeight(r.targetAsset)
+func (r *WeightLimit) Passes(portfolio *asset.Portfolio) (bool, error) {
+	weight, err := portfolio.GetWeight(r.targetAsset)
 	if err != nil {
 		return false, err
 	}

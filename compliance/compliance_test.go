@@ -7,15 +7,9 @@ import (
 	"testing"
 )
 
-type testRule struct {
-	portfolio *asset.Portfolio
-}
+type testRule struct{}
 
-func (t *testRule) GetPortfolio() *asset.Portfolio {
-	return t.portfolio
-}
-
-func (t *testRule) Passes() (bool, error) {
+func (t *testRule) Passes(portfolio *asset.Portfolio) (bool, error) {
 	return false, errors.New("this is a test error")
 }
 
@@ -31,14 +25,10 @@ func TestCompliance(t *testing.T) {
 	portfolio.Transfer(&stock, 100)
 	portfolio.Transfer(&cash, 100)
 
-	cashUnitLimit := NewUnitLimit(&portfolio, &cash, 100)
-	stockUnitLimit := NewUnitLimit(&portfolio, &stock, 100)
-
-	if cashUnitLimit.GetPortfolio() != &portfolio {
-		t.Error("Unexpected portfolio")
-	}
-	if stockUnitLimit.GetPortfolio() != &portfolio {
-		t.Error("Unexpected portfolio")
+	cashUnitLimit := NewUnitLimit(&cash, 100)
+	stockUnitLimit := NewUnitLimit(&stock, 100)
+	for _, rule := range []asset.IComplianceRule{&cashUnitLimit, &stockUnitLimit} {
+		portfolio.AddComplianceRule(rule)
 	}
 
 	// we are on the edge of our limits,
@@ -72,7 +62,8 @@ func TestCompliancePasses(t *testing.T) {
 
 	// transfer 100 shares of stock to the portfolio
 	portfolio.Transfer(&stock, 100)
-	NewUnitLimit(&portfolio, &stock, 100)
+	stockUnitLimit := NewUnitLimit(&stock, 100)
+	portfolio.AddComplianceRule(&stockUnitLimit)
 
 	pass, err := portfolio.PassesCompliance()
 	if err != nil {
@@ -93,7 +84,7 @@ func TestCompliancePasses(t *testing.T) {
 	}
 
 	// add a rule which will throw an error when running
-	err = portfolio.AddComplianceRule(&testRule{portfolio: &portfolio})
+	err = portfolio.AddComplianceRule(&testRule{})
 	if err != nil {
 		t.Errorf("Error in Portfolio{}.AddRule() - %s", err)
 	}

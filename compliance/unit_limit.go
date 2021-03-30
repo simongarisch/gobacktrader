@@ -4,25 +4,17 @@ import "gobacktrader/asset"
 
 // UnitLimit places unit limits on our portfolio holdings.
 type UnitLimit struct {
-	portfolio   *asset.Portfolio
 	targetAsset asset.IAssetReadOnly
 	limit       float64
 }
 
 // NewUnitLimit returns a new instance of UnitLimit.
-func NewUnitLimit(portfolio *asset.Portfolio, targetAsset asset.IAssetReadOnly, limit float64) UnitLimit {
+func NewUnitLimit(targetAsset asset.IAssetReadOnly, limit float64) UnitLimit {
 	unitLimit := UnitLimit{
-		portfolio:   portfolio,
 		targetAsset: targetAsset,
 		limit:       limit,
 	}
-	portfolio.AddComplianceRule(&unitLimit)
 	return unitLimit
-}
-
-// GetPortfolio returns the portfolio for which this limit is applied.
-func (r *UnitLimit) GetPortfolio() *asset.Portfolio {
-	return r.portfolio
 }
 
 // GetAsset returns the asset for which this limit is applied.
@@ -36,8 +28,8 @@ func (r *UnitLimit) GetLimit() float64 {
 }
 
 // Passes returns true if the UnitLimit rule passes, false otherwise.
-func (r *UnitLimit) Passes() (bool, error) {
-	units := r.portfolio.GetUnits(r.targetAsset)
+func (r *UnitLimit) Passes(portfolio *asset.Portfolio) (bool, error) {
+	units := portfolio.GetUnits(r.targetAsset)
 	if units > r.limit {
 		return false, nil
 	}

@@ -18,13 +18,13 @@ func TestUnitLimit(t *testing.T) {
 	portfolio.ModifyPositions(&stock, 100)
 	portfolio.ModifyPositions(&cash, 100)
 
-	cashLimit := NewUnitLimit(&portfolio, &cash, 100)
-	stockLimit := NewUnitLimit(&portfolio, &stock, 99)
+	cashLimit := NewUnitLimit(&cash, 100)
+	stockLimit := NewUnitLimit(&stock, 99)
 
-	if cashLimit.GetPortfolio() != &portfolio {
-		t.Error("Unexpected portfolio")
-	}
 	if cashLimit.GetAsset() != &cash {
+		t.Error("Unexpected asset")
+	}
+	if stockLimit.GetAsset() != &stock {
 		t.Error("Unexpected asset")
 	}
 	if cashLimit.GetLimit() != 100 {
@@ -34,8 +34,8 @@ func TestUnitLimit(t *testing.T) {
 		t.Error("Unexpected stock limit")
 	}
 
-	cashPasses, err1 := cashLimit.Passes()
-	stockPasses, err2 := stockLimit.Passes()
+	cashPasses, err1 := cashLimit.Passes(&portfolio)
+	stockPasses, err2 := stockLimit.Passes(&portfolio)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in UnitLimit{}.Passes() - %s", err)
 	}
