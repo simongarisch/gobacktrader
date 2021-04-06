@@ -23,9 +23,9 @@ func TestCompliance(t *testing.T) {
 
 	// transfer 100 shares of stock and 100 AUD to the portfolio
 	portfolio.Transfer(&stock, 100)
-	portfolio.Transfer(&cash, 100)
+	portfolio.Transfer(cash, 100)
 
-	cashUnitLimit := NewUnitLimit(&cash, 100)
+	cashUnitLimit := NewUnitLimit(cash, 100)
 	stockUnitLimit := NewUnitLimit(&stock, 100)
 	for _, rule := range []asset.IComplianceRule{&cashUnitLimit, &stockUnitLimit} {
 		portfolio.AddComplianceRule(rule)

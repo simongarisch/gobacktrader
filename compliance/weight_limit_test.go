@@ -14,10 +14,10 @@ func TestWeightLimit(t *testing.T) {
 		t.Errorf("Error in asset creation - %s", err)
 	}
 
-	cashLimit := NewWeightLimit(&cash, 0.5)
+	cashLimit := NewWeightLimit(cash, 0.5)
 	stockLimit := NewWeightLimit(&stock, 0.6)
 
-	if cashLimit.GetAsset() != &cash {
+	if cashLimit.GetAsset() != cash {
 		t.Error("Unexpected asset")
 	}
 	if stockLimit.GetAsset() != &stock {
@@ -43,7 +43,7 @@ func TestWeightLimit(t *testing.T) {
 
 	// transfer 100 shares of stock and 100 AUD to the portfolio
 	portfolio.ModifyPositions(&stock, 100)
-	portfolio.ModifyPositions(&cash, 100)
+	portfolio.ModifyPositions(cash, 100)
 
 	// we have transferred assets to the portfolio,
 	// but we still haven't set the price of our stock

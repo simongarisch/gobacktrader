@@ -6,12 +6,39 @@ type Cash struct {
 	currency string
 }
 
-// NewCash returns a new cash asset.
-func NewCash(currency string) (Cash, error) {
+type cashObjects struct {
+	pool map[string]*Cash
+}
+
+var cashObjectsSingleton = cashObjects{}
+
+func (c *cashObjects) getCash(currency string) (*Cash, error) {
+	if c.pool == nil {
+		c.pool = make(map[string]*Cash)
+	}
+
+	_, ok := c.pool[currency]
+	if !ok {
+		cash, err := cashFactory(currency)
+		if err != nil {
+			return &cash, err
+		}
+		c.pool[currency] = &cash
+	}
+
+	return c.pool[currency], nil
+}
+
+func cashFactory(currency string) (Cash, error) {
 	currency, err := ValidateCurrency(currency)
 	cash := Cash{currency: currency}
-	cash.price = unitPrice  // price is always 1.0
+	cash.price = unitPrice
 	return cash, err
+}
+
+// NewCash returns a new cash asset.
+func NewCash(currency string) (*Cash, error) {
+	return cashObjectsSingleton.getCash(currency)
 }
 
 // GetCurrency returns the cash currency.

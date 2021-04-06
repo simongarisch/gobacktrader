@@ -354,3 +354,25 @@ func (p *Portfolio) PassesCompliance() (bool, error) {
 	}
 	return allPasses, nil
 }
+
+// Trade executes some trade for the portfolio.
+func (p *Portfolio) Trade(asset IAssetReadOnly, units float64, consideration *float64) error {
+	if consideration == nil { // calculate consideration
+		assetValue := asset.GetValue()
+		if !assetValue.Valid {
+			return fmt.Errorf("'%s' cannot trade an asset with invalid value", asset.GetTicker())
+		}
+		considerationAmount := assetValue.Float64 * -units
+		consideration = &considerationAmount
+	}
+
+	currencyCode := asset.GetBaseCurrency()
+	cash, err := NewCash(currencyCode)
+	if err != nil {
+		return err
+	}
+
+	p.Transfer(asset, units)
+	p.Transfer(cash, *consideration)
+	return nil
+}

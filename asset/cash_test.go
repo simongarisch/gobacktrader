@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"gobacktrader/btutil"
 	"testing"
 	"time"
 )
@@ -64,8 +65,8 @@ func TestCashHistory(t *testing.T) {
 	time1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
 	time2 := time.Date(2020, time.December, 15, 0, 0, 0, 0, time.UTC)
 
-	cash.TakeSnapshot(time1, &cash)
-	cash.TakeSnapshot(time2, &cash)
+	cash.TakeSnapshot(time1, cash)
+	cash.TakeSnapshot(time2, cash)
 
 	history := cash.GetHistory()
 
@@ -83,5 +84,28 @@ func TestCashHistory(t *testing.T) {
 	}
 	if snap2.GetPrice().Float64 != 1.0 {
 		t.Error("snap2 - unexpected price.")
+	}
+}
+
+func TestCashInstances(t *testing.T) {
+	aud1, err1 := NewCash("AUD")
+	aud2, err2 := NewCash("AUD")
+	usd1, err3 := NewCash("USD")
+	usd2, err4 := NewCash("USD")
+	if err := btutil.AnyValidError(err1, err2, err3, err4); err != nil {
+		t.Errorf("Error in cash init - %s", err)
+	}
+
+	if aud1 != aud2 {
+		t.Error("AUD pointers should be equal")
+	}
+	if usd1 != usd2 {
+		t.Error("USD pointers should be equal")
+	}
+	if aud1 == usd1 {
+		t.Error("AUD cash should be distinct from USD")
+	}
+	if aud2 == usd2 {
+		t.Error("AUD cash should be distinct from USD")
 	}
 }

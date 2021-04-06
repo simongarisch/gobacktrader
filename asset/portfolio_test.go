@@ -113,7 +113,7 @@ func TestGetWeight(t *testing.T) {
 		t.Error("Expecting a stock weight of 100%")
 	}
 
-	weight, err = p.GetWeight(&cash)
+	weight, err = p.GetWeight(cash)
 	if err != nil {
 		t.Errorf("Error in GetWeight - %s", err)
 	}
@@ -122,8 +122,8 @@ func TestGetWeight(t *testing.T) {
 	}
 
 	// add $200 cash by incrementing positions twice
-	p.ModifyPositions(&cash, 150)
-	p.ModifyPositions(&cash, 50)
+	p.ModifyPositions(cash, 150)
+	p.ModifyPositions(cash, 50)
 	stock.SetPrice(Price{Float64: 8.0, Valid: true})
 
 	// stock value = 100 * 8 = 800
@@ -138,7 +138,7 @@ func TestGetWeight(t *testing.T) {
 		t.Error("Expecting a stock weight of 80%")
 	}
 
-	weight, err = p.GetWeight(&cash)
+	weight, err = p.GetWeight(cash)
 	if err != nil {
 		t.Errorf("Error in GetWeight - %s", err)
 	}
@@ -169,9 +169,9 @@ func TestPortfolioValuationCurrency(t *testing.T) {
 
 	// Give both p1 and p2 200 shares of stock and $100 cash.
 	p1.ModifyPositions(&stock, 200)
-	p1.ModifyPositions(&cash, 100)
+	p1.ModifyPositions(cash, 100)
 	p2.ModifyPositions(&stock, 200)
-	p2.ModifyPositions(&cash, 100)
+	p2.ModifyPositions(cash, 100)
 
 	stock.SetPrice(Price{Float64: 2.5, Valid: true})
 
@@ -239,9 +239,9 @@ func TestLargerPortfolio(t *testing.T) {
 	p.ModifyPositions(&stock1, 100)
 	p.ModifyPositions(&stock2, 100)
 	p.ModifyPositions(&stock3, 100)
-	p.ModifyPositions(&aud, 100)
-	p.ModifyPositions(&usd, 100)
-	p.ModifyPositions(&gbp, 100)
+	p.ModifyPositions(aud, 100)
+	p.ModifyPositions(usd, 100)
+	p.ModifyPositions(gbp, 100)
 
 	stock1.SetPrice(Price{Float64: 1.5, Valid: true})
 	stock2.SetPrice(Price{Float64: 2.5, Valid: true})
@@ -318,15 +318,15 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	if p.GetUnits(&stock1) != 0.0 {
 		t.Error("Expecting zero units in stock1.")
 	}
-	if p.GetUnits(&aud) != 0.0 {
+	if p.GetUnits(aud) != 0.0 {
 		t.Error("Expecting zero units in aud cash.")
 	}
 
 	// add 100 shares of each stock and $100 for each currency
 	p.ModifyPositions(&stock1, 100)
 	p.ModifyPositions(&stock2, 100)
-	p.ModifyPositions(&aud, 100)
-	p.ModifyPositions(&usd, 100)
+	p.ModifyPositions(aud, 100)
+	p.ModifyPositions(usd, 100)
 
 	stock1.SetPrice(Price{Float64: 1.5, Valid: true})
 	stock2.SetPrice(Price{Float64: 2.5, Valid: true})
@@ -359,7 +359,7 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	}
 
 	// check the units
-	for _, targetAsset := range []IAssetReadOnly{&stock1, &stock2, &aud, &usd} {
+	for _, targetAsset := range []IAssetReadOnly{&stock1, &stock2, aud, usd} {
 		if p.GetUnits(targetAsset) != 100 {
 			t.Errorf("'%s': expecting to hold 100 units", targetAsset.GetTicker())
 		}
@@ -373,8 +373,8 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	// sum of weights = 100%
 	wStock1, err1 := p.GetWeight(&stock1)
 	wStock2, err2 := p.GetWeight(&stock2)
-	wAud, err3 := p.GetWeight(&aud)
-	wUsd, err4 := p.GetWeight(&usd)
+	wAud, err3 := p.GetWeight(aud)
+	wUsd, err4 := p.GetWeight(usd)
 	if err := btutil.AnyValidError(err1, err3, err3, err4); err != nil {
 		t.Errorf("Error in portfolio.GetWeight - %s", err)
 	}
@@ -407,7 +407,7 @@ func TestPortfolioSnapshots(t *testing.T) {
 
 	// add 100 units of each
 	p.ModifyPositions(&stock, 100)
-	p.ModifyPositions(&cash, 100)
+	p.ModifyPositions(cash, 100)
 	stock.SetPrice(Price{Float64: 1.5, Valid: true})
 
 	// portfolio value is 1.50 * 100 + 100 = 250 AUD
@@ -436,7 +436,7 @@ func TestPortfolioSnapshots(t *testing.T) {
 	}
 	weights := snap1.GetWeights()
 	wStock, _ := weights[&stock]
-	wCash, _ := weights[&cash]
+	wCash, _ := weights[cash]
 	if wStock.Float64 != 0.6 {
 		t.Errorf("Unexpected stock weight: wanted 0.60, got %0.2f", wStock.Float64)
 	}
@@ -453,7 +453,7 @@ func TestPortfolioSnapshots(t *testing.T) {
 	}
 	weights = snap2.GetWeights()
 	wStock, _ = weights[&stock]
-	wCash, _ = weights[&cash]
+	wCash, _ = weights[cash]
 	if wStock.Float64 != 0.75 {
 		t.Errorf("Unexpected stock weight: wanted 0.75, got %0.2f", wStock.Float64)
 	}
@@ -530,7 +530,7 @@ func TestGetValueWeightsError(t *testing.T) {
 
 	// transfer 100 shares of stock and 100 AUD to the portfolio
 	p.Transfer(&stock, 100)
-	p.Transfer(&cash, 100)
+	p.Transfer(cash, 100)
 
 	// this stock doesn't yet have a price, so the portfolio
 	// value is invalid.
@@ -562,7 +562,7 @@ func TestGetValueWeightsError(t *testing.T) {
 	if portfolioValue.Float64 != 200.0 {
 		t.Errorf("Expecting a portfolio value of $200, got $%0.2f", portfolioValue.Float64)
 	}
-	wCash, _ := portfolioWeights[&cash]
+	wCash, _ := portfolioWeights[cash]
 	wStock, _ := portfolioWeights[&stock]
 	if wCash.Float64 != 0.5 {
 		t.Errorf("Expecting a cash weight of 0.5, got %0.2f", wCash.Float64)
@@ -632,7 +632,7 @@ func TestGetValueWeightsError(t *testing.T) {
 	if portfolioValue.Float64 != 325 {
 		t.Errorf("Unexpected portfolio value: wanted $325 got $%0.2f", portfolioValue.Float64)
 	}
-	wCash, _ = portfolioWeights[&cash]
+	wCash, _ = portfolioWeights[cash]
 	wStock, _ = portfolioWeights[&stock]
 	wStock2, _ := portfolioWeights[&stock2]
 	wCashFloat := btutil.Round4dp(wCash.Float64)
@@ -895,5 +895,54 @@ func TestPassesCompliance(t *testing.T) {
 	errStr := btutil.GetErrorString(err)
 	if errStr != "this rule throws an error" {
 		t.Errorf("Unexpected error string - %s", err)
+	}
+}
+
+func TestTrade(t *testing.T) {
+	portfolio, err1 := NewPortfolio("XXX", "AUD")
+	stock, err2 := NewStock("ZZB AU", "AUD")
+	cash, err3 := NewCash("AUD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error during asset init - %s", err)
+	}
+
+	portfolio.Transfer(cash, 1000)
+
+	// assets need to have valid prices / values before we can trade them
+	err := portfolio.Trade(&stock, 100.0, nil)
+	errStr := btutil.GetErrorString(err)
+	if errStr != "'ZZB AU' cannot trade an asset with invalid value" {
+		t.Errorf("Unexpected error string - '%s'", errStr)
+	}
+
+	stock.SetPrice(Price{Float64: 2.50, Valid: true})
+	err = portfolio.Trade(&stock, 100.0, nil)
+	if err != nil {
+		t.Errorf("Error in portfolio.Trade - %s", err)
+	}
+
+	// after this trade the portfolio will have
+	// 100 shares of stock at $2.50, so AUD 250 worth in total
+	// 1000 - 250 = AUD 750 in cash.
+
+	if portfolio.GetUnits(&stock) != 100 {
+		t.Error("Unexpected shares in ZZB AU")
+	}
+	if portfolio.GetUnits(cash) != 750 {
+		t.Error("Unexpected AUD cash")
+	}
+
+	// traded assets must have a valid currency code
+	asset := Asset{
+		ticker:       "ZZX AU",
+		baseCurrency: "AUDX",
+		multiplier:   1.0,
+	}
+	asset.SetPrice(Price{Float64: 2.50, Valid: true})
+
+	err = portfolio.Trade(&asset, 100.0, nil)
+	errStr = btutil.GetErrorString(err)
+	if errStr != "'AUDX' is not a valid currency code" {
+		t.Errorf("Unexpected error string '%s'", errStr)
 	}
 }

@@ -16,12 +16,12 @@ func TestUnitLimit(t *testing.T) {
 
 	// transfer 100 shares of stock and 100 AUD to the portfolio
 	portfolio.ModifyPositions(&stock, 100)
-	portfolio.ModifyPositions(&cash, 100)
+	portfolio.ModifyPositions(cash, 100)
 
-	cashLimit := NewUnitLimit(&cash, 100)
+	cashLimit := NewUnitLimit(cash, 100)
 	stockLimit := NewUnitLimit(&stock, 99)
 
-	if cashLimit.GetAsset() != &cash {
+	if cashLimit.GetAsset() != cash {
 		t.Error("Unexpected asset")
 	}
 	if stockLimit.GetAsset() != &stock {
