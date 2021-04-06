@@ -9,61 +9,63 @@ import (
 func TestRegisterPortfolio(t *testing.T) {
 	backtest := NewBacktest()
 
-	p, err := asset.NewPortfolio("XXX", "AUD")
+	portfolio, err := asset.NewPortfolio("XXX", "AUD")
 	if err != nil {
 		t.Errorf("Error in NewPortfolio - %s", err)
 	}
 
-	a, err := asset.NewStock("ZZB AU", "AUD")
+	stock, err := asset.NewStock("ZZB AU", "AUD")
 	if err != nil {
 		t.Errorf("Error in NewStock - %s", err)
 	}
 
-	if backtest.HasPortfolio(&p) {
+	if backtest.HasPortfolio(portfolio) {
 		t.Error("Backtest should not have portfolio registered.")
 	}
-	if backtest.HasAsset(a) {
+	if backtest.HasAsset(stock) {
 		t.Error("Backtest should not have asset registered.")
 	}
 
-	err1 := backtest.RegisterPortfolio(&p)
-	err2 := backtest.RegisterAsset(a)
+	err1 := backtest.RegisterPortfolio(portfolio)
+	err2 := backtest.RegisterAsset(stock)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in backtest.Register - %s", err)
 	}
 
-	if !backtest.HasPortfolio(&p) {
+	if !backtest.HasPortfolio(portfolio) {
 		t.Error("Backtest should have portfolio registered.")
 	}
-	if !backtest.HasAsset(a) {
+	if !backtest.HasAsset(stock) {
 		t.Error("Backtest should have asset registered.")
 	}
 
 	// we should be able to register the same asset and portfolio
 	// again without issue
-	err1 = backtest.RegisterPortfolio(&p)
-	err2 = backtest.RegisterAsset(a)
+	err1 = backtest.RegisterPortfolio(portfolio)
+	err2 = backtest.RegisterAsset(stock)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in backtest.Register - %s", err)
 	}
 
 	// try to register a different portfolio and asset with the same codes
-	p2, err := asset.NewPortfolio("XXX", "USD")
+	portfolio2, err := asset.NewPortfolio("XXX", "USD")
 	if err != nil {
 		t.Errorf("Error in NewPortfolio - %s", err)
 	}
 
-	a2, err := asset.NewStock("ZZB AU", "USD")
+	stock2, err := asset.NewStock("ZZB AU", "USD")
 	if err != nil {
 		t.Errorf("Error in NewStock - %s", err)
 	}
 
-	err1 = backtest.RegisterPortfolio(&p2)
-	err2 = backtest.RegisterAsset(a2)
-	if err1.Error() != "portfolio code 'XXX' is already in use and needs to be unique" {
-		t.Errorf("Unexpected error string '%s'", err1.Error())
+	err1 = backtest.RegisterPortfolio(portfolio2)
+	err2 = backtest.RegisterAsset(stock2)
+	errStr1 := btutil.GetErrorString(err1)
+	errStr2 := btutil.GetErrorString(err2)
+	if errStr1 != "portfolio code 'XXX' is already in use and needs to be unique" {
+		t.Errorf("Unexpected error string '%s'", errStr1)
 	}
-	if err2.Error() != "asset ticker 'ZZB AU' is already in use and needs to be unique" {
-		t.Errorf("Unexpected error string '%s'", err2.Error())
+	if errStr2 != "asset ticker 'ZZB AU' is already in use and needs to be unique" {
+		t.Errorf("Unexpected error string '%s'", errStr2)
 	}
 }

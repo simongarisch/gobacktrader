@@ -95,7 +95,7 @@ func (p Portfolio) Show() string {
 }
 
 // NewPortfolio returns a new instance of Portfolio.
-func NewPortfolio(code string, baseCurrency string) (Portfolio, error) {
+func NewPortfolio(code string, baseCurrency string) (*Portfolio, error) {
 	positions := make(map[IAssetReadOnly]*Position)
 	history := make(map[time.Time]PortfolioSnapshot)
 	baseCurrency, err := ValidateCurrency(baseCurrency)
@@ -107,7 +107,7 @@ func NewPortfolio(code string, baseCurrency string) (Portfolio, error) {
 		fxRates:      fxRates,
 		history:      history,
 	}
-	return portfolio, err
+	return &portfolio, err
 }
 
 // GetCode returns our portfolio code
@@ -281,7 +281,7 @@ func (p Portfolio) GetHistory() map[time.Time]PortfolioSnapshot {
 }
 
 // Copy returns a copy of the portfolio ex history.
-func (p *Portfolio) Copy() (Portfolio, error) {
+func (p *Portfolio) Copy() (*Portfolio, error) {
 	portfolioCopy, err := NewPortfolio(p.GetCode(), p.GetBaseCurrency())
 	if err != nil {
 		return portfolioCopy, err

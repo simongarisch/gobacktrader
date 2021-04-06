@@ -247,7 +247,7 @@ func TestLargerPortfolio(t *testing.T) {
 	stock2.SetPrice(Price{Float64: 2.5, Valid: true})
 	stock3.SetPrice(Price{Float64: 3.5, Valid: true})
 
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 	audusd, err1 := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
 	gbpaud, err2 := NewFxRate("GBPAUD", Price{Float64: 1.80, Valid: true})
 	if err := btutil.AnyValidError(err1, err2); err != nil {
@@ -256,7 +256,7 @@ func TestLargerPortfolio(t *testing.T) {
 
 	fxRates.Register(audusd)
 	fxRates.Register(gbpaud)
-	p.SetFxRates(&fxRates)
+	p.SetFxRates(fxRates)
 
 	// this portfolio has a base currency of AUD
 	// stock value = (1.5 * 100) + (2.5 * 100) / 0.75 + (3.5 * 100) * 1.80 = 1113.3333
@@ -824,7 +824,7 @@ func TestPassesCompliance(t *testing.T) {
 	}
 
 	// compliance should pass where there are no rules.
-	for _, portfolio := range []Portfolio{portfolio1, portfolio2} {
+	for _, portfolio := range []*Portfolio{portfolio1, portfolio2} {
 		pass, err := portfolio.PassesCompliance()
 		if err != nil {
 			t.Error("Error in PassesCompliance")

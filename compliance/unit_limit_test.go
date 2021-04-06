@@ -34,8 +34,8 @@ func TestUnitLimit(t *testing.T) {
 		t.Error("Unexpected stock limit")
 	}
 
-	cashPasses, err1 := cashLimit.Passes(&portfolio)
-	stockPasses, err2 := stockLimit.Passes(&portfolio)
+	cashPasses, err1 := cashLimit.Passes(portfolio)
+	stockPasses, err2 := stockLimit.Passes(portfolio)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in UnitLimit{}.Passes() - %s", err)
 	}
