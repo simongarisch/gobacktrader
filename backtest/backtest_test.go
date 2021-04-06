@@ -22,12 +22,12 @@ func TestRegisterPortfolio(t *testing.T) {
 	if backtest.HasPortfolio(&p) {
 		t.Error("Backtest should not have portfolio registered.")
 	}
-	if backtest.HasAsset(&a) {
+	if backtest.HasAsset(a) {
 		t.Error("Backtest should not have asset registered.")
 	}
 
 	err1 := backtest.RegisterPortfolio(&p)
-	err2 := backtest.RegisterAsset(&a)
+	err2 := backtest.RegisterAsset(a)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in backtest.Register - %s", err)
 	}
@@ -35,14 +35,14 @@ func TestRegisterPortfolio(t *testing.T) {
 	if !backtest.HasPortfolio(&p) {
 		t.Error("Backtest should have portfolio registered.")
 	}
-	if !backtest.HasAsset(&a) {
+	if !backtest.HasAsset(a) {
 		t.Error("Backtest should have asset registered.")
 	}
 
 	// we should be able to register the same asset and portfolio
 	// again without issue
 	err1 = backtest.RegisterPortfolio(&p)
-	err2 = backtest.RegisterAsset(&a)
+	err2 = backtest.RegisterAsset(a)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		t.Errorf("Error in backtest.Register - %s", err)
 	}
@@ -59,7 +59,7 @@ func TestRegisterPortfolio(t *testing.T) {
 	}
 
 	err1 = backtest.RegisterPortfolio(&p2)
-	err2 = backtest.RegisterAsset(&a2)
+	err2 = backtest.RegisterAsset(a2)
 	if err1.Error() != "portfolio code 'XXX' is already in use and needs to be unique" {
 		t.Errorf("Unexpected error string '%s'", err1.Error())
 	}
