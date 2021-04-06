@@ -12,12 +12,12 @@ type WeightLimit struct {
 }
 
 // NewWeightLimit returns a new instance of WeightLimit
-func NewWeightLimit(targetAsset asset.IAssetReadOnly, limit float64) WeightLimit {
+func NewWeightLimit(targetAsset asset.IAssetReadOnly, limit float64) *WeightLimit {
 	weightLimit := WeightLimit{
 		targetAsset: targetAsset,
 		limit:       limit,
 	}
-	return weightLimit
+	return &weightLimit
 }
 
 // GetAsset returns the asset for which this limit is applied.

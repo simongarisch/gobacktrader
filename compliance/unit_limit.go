@@ -9,12 +9,12 @@ type UnitLimit struct {
 }
 
 // NewUnitLimit returns a new instance of UnitLimit.
-func NewUnitLimit(targetAsset asset.IAssetReadOnly, limit float64) UnitLimit {
+func NewUnitLimit(targetAsset asset.IAssetReadOnly, limit float64) *UnitLimit {
 	unitLimit := UnitLimit{
 		targetAsset: targetAsset,
 		limit:       limit,
 	}
-	return unitLimit
+	return &unitLimit
 }
 
 // GetAsset returns the asset for which this limit is applied.

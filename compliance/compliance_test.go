@@ -27,7 +27,7 @@ func TestCompliance(t *testing.T) {
 
 	cashUnitLimit := NewUnitLimit(cash, 100)
 	stockUnitLimit := NewUnitLimit(stock, 100)
-	for _, rule := range []asset.IComplianceRule{&cashUnitLimit, &stockUnitLimit} {
+	for _, rule := range []asset.IComplianceRule{cashUnitLimit, stockUnitLimit} {
 		portfolio.AddComplianceRule(rule)
 	}
 
@@ -63,7 +63,7 @@ func TestCompliancePasses(t *testing.T) {
 	// transfer 100 shares of stock to the portfolio
 	portfolio.Transfer(stock, 100)
 	stockUnitLimit := NewUnitLimit(stock, 100)
-	portfolio.AddComplianceRule(&stockUnitLimit)
+	portfolio.AddComplianceRule(stockUnitLimit)
 
 	pass, err := portfolio.PassesCompliance()
 	if err != nil {
