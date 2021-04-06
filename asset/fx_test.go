@@ -125,14 +125,14 @@ func TestFxRate(t *testing.T) {
 }
 
 func TestFxRates(t *testing.T) {
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 
 	price := Price{Float64: 0.75, Valid: true}
 	audusd, err := NewFxRate("AUDUSD", price)
 	if err != nil {
 		t.Errorf("Error in NewFxRate - %s", err)
 	}
-	err = fxRates.Register(&audusd)
+	err = fxRates.Register(audusd)
 	if err != nil {
 		t.Errorf("Error in fxRates.Register - %s", err)
 	}
@@ -166,7 +166,7 @@ func TestFxRates(t *testing.T) {
 }
 
 func TestFxRatesEmpty(t *testing.T) {
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 	_, ok, err := fxRates.GetRate("AUDUSD")
 	if ok {
 		t.Error("'AUDUSD' rate shouldn't be available.")
@@ -182,19 +182,19 @@ func TestFxRatesRegistering(t *testing.T) {
 	yyyxxx, _ := NewFxRate("YYYXXX", Price{Float64: 2.0, Valid: true})
 
 	var err error
-	err = fxRates.Register(&xxxyyy)
+	err = fxRates.Register(xxxyyy)
 	if err != nil {
 		t.Errorf("Error in fxRates.Register - %s", err)
 	}
 
-	err = fxRates.Register(&yyyxxx) // we already implicitly have this rate
+	err = fxRates.Register(yyyxxx) // we already implicitly have this rate
 	if btutil.GetErrorString(err) != "'YYYXXX' fx rate instance already exists" {
 		t.Error("Unexpected error when registering inverse rate.")
 	}
 
 	// try an invalid FxRate
-	fxRate := FxRate{pair: "AUDUSDA"}
-	err = fxRates.Register(&fxRate)
+	fxRate, _ := NewFxRate("AUDUSDA", unitPrice)
+	err = fxRates.Register(fxRate)
 	if btutil.GetErrorString(err) != "expecting a six character currency pair, got 'AUDUSDA'" {
 		t.Error("Unexpected error string.")
 	}
@@ -234,7 +234,7 @@ func TestZeroRates(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in NewFxRate - %s", err)
 	}
-	fxRates.Register(&fxRate)
+	fxRates.Register(fxRate)
 
 	_, _, err = fxRates.GetRate("AUDUSD")
 	if btutil.GetErrorString(err) != "'AUDUSD' FX rate is zero" {
@@ -262,7 +262,7 @@ func TestFxRateChanges(t *testing.T) {
 		t.Errorf("Error in NewFxRate - %s", err)
 	}
 
-	err = fxRates.Register(&audusd)
+	err = fxRates.Register(audusd)
 	if err != nil {
 		t.Errorf("Error in fxRates.Register - %s", err)
 	}
@@ -305,9 +305,9 @@ func TestFxHistory(t *testing.T) {
 	price2 := Price{Float64: 0.80, Valid: true}
 
 	fxrate.SetPrice(price1)
-	fxrate.TakeSnapshot(time1, &fxrate)
+	fxrate.TakeSnapshot(time1, fxrate)
 	fxrate.SetPrice(price2)
-	fxrate.TakeSnapshot(time2, &fxrate)
+	fxrate.TakeSnapshot(time2, fxrate)
 
 	history := fxrate.GetHistory()
 

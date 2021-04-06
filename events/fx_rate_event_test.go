@@ -1,9 +1,9 @@
 package events
 
 import (
+	"gobacktrader/asset"
 	"testing"
 	"time"
-	"gobacktrader/asset"
 )
 
 func TestFxRateEvent(t *testing.T) {
@@ -16,7 +16,7 @@ func TestFxRateEvent(t *testing.T) {
 	newRate := asset.Price{Float64: 0.80, Valid: true}
 
 	// create a new FX rate event
-	fxRateEvent := NewFxRateEvent(&audusd, eventTime, newRate)
+	fxRateEvent := NewFxRateEvent(audusd, eventTime, newRate)
 	if !fxRateEvent.GetTime().Equal(eventTime) {
 		t.Error("Unexpected event time.")
 	}

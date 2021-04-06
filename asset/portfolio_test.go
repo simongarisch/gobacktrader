@@ -175,15 +175,15 @@ func TestPortfolioValuationCurrency(t *testing.T) {
 
 	stock.SetPrice(Price{Float64: 2.5, Valid: true})
 
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 	audusd, err := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
 	if err != nil {
 		t.Errorf("Error in NewFxRate - %s", err)
 	}
 
-	fxRates.Register(&audusd)
-	p1.SetFxRates(&fxRates)
-	p2.SetFxRates(&fxRates)
+	fxRates.Register(audusd)
+	p1.SetFxRates(fxRates)
+	p2.SetFxRates(fxRates)
 
 	// this is an AUD denominated stock and AUD cash
 	// AUD portfolio value = 200 * 2.50 + 100 = 600 AUD
@@ -254,8 +254,8 @@ func TestLargerPortfolio(t *testing.T) {
 		t.Errorf("Error in NewFxRate - %s", err)
 	}
 
-	fxRates.Register(&audusd)
-	fxRates.Register(&gbpaud)
+	fxRates.Register(audusd)
+	fxRates.Register(gbpaud)
 	p.SetFxRates(&fxRates)
 
 	// this portfolio has a base currency of AUD
@@ -331,14 +331,14 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 	stock1.SetPrice(Price{Float64: 1.5, Valid: true})
 	stock2.SetPrice(Price{Float64: 2.5, Valid: true})
 
-	fxRates := FxRates{}
+	fxRates := NewFxRates()
 	audusd, err := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
 	if err != nil {
 		t.Errorf("Error in NewFxRate - %s", err)
 	}
 
-	fxRates.Register(&audusd)
-	p.SetFxRates(&fxRates)
+	fxRates.Register(audusd)
+	p.SetFxRates(fxRates)
 
 	// this portfolio has a base currency of AUD
 	// stock value = (1.5 * 100) + (2.5 * 100) / 0.75 = 483.3333
@@ -471,8 +471,8 @@ func TestPortfolioNoFxRate(t *testing.T) {
 	}
 
 	stock.SetPrice(Price{Float64: 3.0, Valid: true})
-	fxRates := FxRates{}
-	fxRates.Register(&audusd)
+	fxRates := NewFxRates()
+	fxRates.Register(audusd)
 
 	// transfer 100 shares of stock
 	// note the portfolio fx rates is currently empty
@@ -487,7 +487,7 @@ func TestPortfolioNoFxRate(t *testing.T) {
 	}
 
 	// set the fx rates so we can get a valuation
-	p.SetFxRates(&fxRates)
+	p.SetFxRates(fxRates)
 	value, err = p.GetValue()
 	if err != nil {
 		t.Errorf("Error in portfolio.GetValue - %s", err)
@@ -612,7 +612,7 @@ func TestGetValueWeightsError(t *testing.T) {
 		t.Errorf("Error in NewFxRate - %s", err)
 	}
 
-	fxRates.Register(&audusd)
+	fxRates.Register(audusd)
 	p.SetFxRates(&fxRates)
 
 	// positions should now be as follows

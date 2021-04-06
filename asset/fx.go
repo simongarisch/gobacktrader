@@ -70,11 +70,11 @@ type FxRate struct {
 }
 
 // NewFxRate returns a new instance of FxRate
-func NewFxRate(pair string, price Price) (FxRate, error) {
+func NewFxRate(pair string, price Price) (*FxRate, error) {
 	pair, err := ValidatePair(pair)
 	fxrate := FxRate{pair: pair}
 	fxrate.SetRate(price)
-	return fxrate, err
+	return &fxrate, err
 }
 
 // GetPair returns the FX pair as a string
@@ -105,8 +105,8 @@ type FxRates struct {
 }
 
 // NewFxRates returns a new instance of FxRates.
-func NewFxRates() FxRates {
-	return FxRates{}
+func NewFxRates() *FxRates {
+	return &FxRates{}
 }
 
 // Register adds an FXRate to the available FxRates.
