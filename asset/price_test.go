@@ -17,7 +17,7 @@ func TestPriceSnapshot(t *testing.T) {
 
 	// create our new snapshot and test
 	timestamp := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
-	snap := newPriceSnapshot(timestamp, &stock)
+	snap := newPriceSnapshot(timestamp, stock)
 
 	if !snap.GetTime().Equal(timestamp) {
 		t.Error("Unexpected timestamp")

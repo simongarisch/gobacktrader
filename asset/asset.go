@@ -38,7 +38,7 @@ type IAssetWriteOnly interface {
 
 // NewAsset creates a new asset instance with a
 // default multiplier.
-func NewAsset(ticker string, baseCurrency string) (Asset, error) {
+func NewAsset(ticker string, baseCurrency string) (*Asset, error) {
 	ticker = btutil.CleanString(ticker)
 	baseCurrency, err := ValidateCurrency(baseCurrency)
 	asset := Asset{
@@ -46,12 +46,12 @@ func NewAsset(ticker string, baseCurrency string) (Asset, error) {
 		baseCurrency: baseCurrency,
 		multiplier:   defaultMultiplier,
 	}
-	return asset, err
+	return &asset, err
 }
 
 // NewAssetWithMultiplier create a new asset with
 // a non-default multiplier.
-func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float64) (Asset, error) {
+func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float64) (*Asset, error) {
 	ticker = btutil.CleanString(ticker)
 	baseCurrency, err := ValidateCurrency(baseCurrency)
 	asset := Asset{
@@ -59,7 +59,7 @@ func NewAssetWithMultiplier(ticker string, baseCurrency string, multiplier float
 		baseCurrency: baseCurrency,
 		multiplier:   multiplier,
 	}
-	return asset, err
+	return &asset, err
 }
 
 // GetTicker returns the asset's ticker code.

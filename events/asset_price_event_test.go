@@ -1,9 +1,9 @@
 package events
 
 import (
+	"gobacktrader/asset"
 	"testing"
 	"time"
-	"gobacktrader/asset"
 )
 
 func TestAssetPriceEvent(t *testing.T) {
@@ -13,9 +13,9 @@ func TestAssetPriceEvent(t *testing.T) {
 	}
 	eventTime := time.Date(2021, time.March, 13, 0, 0, 0, 0, time.UTC)
 	price := asset.Price{Float64: 3.00, Valid: true}
-	
+
 	// create a new asset price event
-	assetPriceEvent := NewAssetPriceEvent(&stock, eventTime, price)
+	assetPriceEvent := NewAssetPriceEvent(stock, eventTime, price)
 	if !assetPriceEvent.GetTime().Equal(eventTime) {
 		t.Error("Unexpected event time.")
 	}

@@ -96,9 +96,9 @@ func TestAssetHistory(t *testing.T) {
 	price2 := Price{Float64: 3.0, Valid: true}
 
 	stock.SetPrice(price1)
-	stock.TakeSnapshot(time1, &stock)
+	stock.TakeSnapshot(time1, stock)
 	stock.SetPrice(price2)
-	stock.TakeSnapshot(time2, &stock)
+	stock.TakeSnapshot(time2, stock)
 
 	history := stock.GetHistory()
 

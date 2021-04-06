@@ -7,7 +7,7 @@ func TestNewPosition(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in NewStock - %s", err)
 	}
-	position := NewPosition(&asset, 100.0)
+	position := NewPosition(asset, 100.0)
 	if position.GetTicker() != "ZZB AU" {
 		t.Error("Unexpected ticker.")
 	}
@@ -17,7 +17,7 @@ func TestNewPosition(t *testing.T) {
 	if position.GetUnits() != 100.0 {
 		t.Error("Unexpected units.")
 	}
-	if position.GetAsset() != &asset {
+	if position.GetAsset() != asset {
 		t.Error("Unexpected asset")
 	}
 }
@@ -27,7 +27,7 @@ func TestPositionValue(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error in NewStock - %s", err)
 	}
-	position := NewPosition(&stock, 100.0)
+	position := NewPosition(stock, 100.0)
 
 	if position.GetUnits() != 100.0 {
 		t.Error("Expected 100 units.")
