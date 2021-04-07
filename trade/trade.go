@@ -13,6 +13,15 @@ type Trade struct {
 	units       float64
 }
 
+// NewTrade returns a new Trade instance.
+func NewTrade(portfolio *asset.Portfolio, targetAsset asset.IAssetReadOnly, units float64) Trade {
+	return Trade{
+		portfolio:   portfolio,
+		targetAsset: targetAsset,
+		units:       units,
+	}
+}
+
 // GetPortfolio returns the target portfolio.
 func (t *Trade) GetPortfolio() *asset.Portfolio {
 	return t.portfolio
