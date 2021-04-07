@@ -31,7 +31,7 @@ func TestTradeInit(t *testing.T) {
 
 	// check the trade value
 	stock.SetPrice(asset.Price{Float64: 2.50, Valid: true})
-	value := trade.GetBaseCurrencyValue()
+	value := trade.GetLocalCurrencyValue()
 	if !value.Valid {
 		t.Error("Trade should have a valid value")
 	}

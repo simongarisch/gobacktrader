@@ -26,8 +26,8 @@ func (t *Trade) GetUnits() float64 {
 	return t.units
 }
 
-// GetBaseCurrencyValue returns the trade value.
-func (t *Trade) GetBaseCurrencyValue() asset.Price {
+// GetLocalCurrencyValue returns the trade value.
+func (t *Trade) GetLocalCurrencyValue() asset.Price {
 	assetValue := t.targetAsset.GetValue()
 	if !assetValue.Valid {
 		return asset.Price{Float64: 0.0, Valid: false}
