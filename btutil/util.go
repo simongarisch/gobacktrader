@@ -61,12 +61,12 @@ func PadLeft(str, pad string, length uint) string {
 }
 
 // Sgn returns the sign of a number.
-func Sgn(n float64) int {
+func Sgn(n float64) float64 {
 	switch {
 	case n < 0:
-		return -1
+		return -1.0
 	case n > 0:
-		return +1
+		return +1.0
 	}
-	return 0
+	return 0.0
 }
