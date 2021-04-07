@@ -88,3 +88,15 @@ func TestPadLeft(t *testing.T) {
 		t.Error("Expecting 'xxabc'")
 	}
 }
+
+func TestSgn(t *testing.T) {
+	if Sgn(+10.0) != +1 {
+		t.Error("Unexpected sign")
+	}
+	if Sgn(-10.0) != -1 {
+		t.Error("Unexpected sign")
+	}
+	if Sgn(0.0) != 0 {
+		t.Error("Unexpected sign")
+	}
+}
