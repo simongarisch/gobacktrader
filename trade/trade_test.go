@@ -28,4 +28,14 @@ func TestTradeInit(t *testing.T) {
 	if trade.GetUnits() != 100 {
 		t.Error("Unexpected units")
 	}
+
+	// check the trade value
+	stock.SetPrice(asset.Price{Float64: 2.50, Valid: true})
+	value := trade.GetBaseCurrencyValue()
+	if !value.Valid {
+		t.Error("Trade should have a valid value")
+	}
+	if value.Float64 != 250 {
+		t.Errorf("Unexpected trade value: wanted 250, got %0.2f", value.Float64)
+	}
 }
