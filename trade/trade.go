@@ -2,6 +2,8 @@ package trade
 
 import (
 	"gobacktrader/asset"
+	"gobacktrader/btutil"
+	"math"
 )
 
 // Trade defines a trade in some asset for a given portfolio.
@@ -33,8 +35,22 @@ func (t *Trade) GetLocalCurrencyValue() asset.Price {
 		return asset.Price{Float64: 0.0, Valid: false}
 	}
 
-	tradeValue := assetValue.Float64 * t.units
+	tradeValue := assetValue.Float64 * math.Abs(t.units)
 	return asset.Price{Float64: tradeValue, Valid: true}
+}
+
+// GetLocalCurrencyConsideration returns the cash transferred
+// for this trade in local currency.
+func (t *Trade) GetLocalCurrencyConsideration() asset.Price {
+	tradeValue := t.GetLocalCurrencyValue()
+	if !tradeValue.Valid {
+		return asset.Price{Float64: 0.0, Valid: false}
+	}
+
+	// cash goes out for buys and comes in for sells
+	consideration := tradeValue.Float64 * btutil.Sgn(t.GetUnits()) * -1.0
+
+	return asset.Price{Float64: consideration, Valid: true}
 }
 
 // PassesCompliance returns true if compliance passes, false otherwise.
