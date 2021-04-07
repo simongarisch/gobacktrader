@@ -41,10 +41,10 @@ func (e FillAtLastWithSlippage) Execute(trade trade.Trade) error {
 	// slippage on sell trades will result in less consideration being received
 	considerationFloat := consideration.Float64
 	if btutil.Sgn(units) == +1.0 { // we are buyers and will have to pay more
-		considerationFloat = considerationFloat * (1 + e.slippage)
+		considerationFloat *= (1 + e.slippage)
 	}
 	if btutil.Sgn(units) == -1.0 { // we are sellers and will receive less
-		considerationFloat = considerationFloat * (1 - e.slippage)
+		considerationFloat *= (1 - e.slippage)
 	}
 	portfolio.Trade(asset, units, &considerationFloat)
 	return nil
