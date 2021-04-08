@@ -9,6 +9,11 @@ import (
 // FillAtLast executes a trade at the last available price.
 type FillAtLast struct{}
 
+// NewFillAtLast returns a new instance of FillAtLast.
+func NewFillAtLast() FillAtLast {
+	return FillAtLast{}
+}
+
 // Execute executes a specific trade.
 func (e FillAtLast) Execute(trade trade.Trade) error {
 	consideration := trade.GetLocalCurrencyConsideration()
@@ -26,6 +31,11 @@ func (e FillAtLast) Execute(trade trade.Trade) error {
 // slippage to the last available price.
 type FillAtLastWithSlippage struct {
 	slippage float64
+}
+
+// NewFillAtLastWithSlippage returns a new instance of FillAtLastWithSlippage.
+func NewFillAtLastWithSlippage(slippage float64) FillAtLastWithSlippage {
+	return FillAtLastWithSlippage{slippage: slippage}
 }
 
 // Execute executes a specific trade with slippage.
