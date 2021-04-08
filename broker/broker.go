@@ -31,7 +31,7 @@ func NewBroker(charges ChargesStrategy, execution ExecutionStrategy) Broker {
 
 // Execute will use our broker instance to execute a trade.
 func (b *Broker) Execute(trade trade.Trade) error {
-	err1 := b.charges.Charge(trade)
-	err2 := b.execution.Execute(trade)
+	err1 := b.execution.Execute(trade)
+	err2 := b.charges.Charge(trade)
 	return btutil.AnyValidError(err1, err2)
 }
