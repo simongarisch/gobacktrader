@@ -22,6 +22,11 @@ type IComplianceRule interface {
 	Passes(*Portfolio) (bool, error)
 }
 
+// IBroker defines the broker interface.
+type IBroker interface {
+	Execute(interface{}) error
+}
+
 // PortfolioSnapshot takes a snapshot of portfolio value and weights
 // for a specific timestamp.
 type PortfolioSnapshot struct {
@@ -63,6 +68,17 @@ type Portfolio struct {
 	fxRates         *FxRates
 	history         map[time.Time]PortfolioSnapshot
 	complianceRules []IComplianceRule
+	broker          IBroker
+}
+
+// SetBroker sets the portfolio broker.
+func (p *Portfolio) SetBroker(broker IBroker) {
+	p.broker = broker
+}
+
+// GetBroker returns the portfolio broker.
+func (p *Portfolio) GetBroker() IBroker {
+	return p.broker
 }
 
 // Show will print and return a string representation
@@ -300,6 +316,7 @@ func (p *Portfolio) Copy() (*Portfolio, error) {
 		portfolioCopy.AddComplianceRule(rule)
 	}
 
+	portfolioCopy.SetBroker(p.GetBroker())
 	return portfolioCopy, nil
 }
 
