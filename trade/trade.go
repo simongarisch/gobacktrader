@@ -1,6 +1,7 @@
 package trade
 
 import (
+	"errors"
 	"gobacktrader/asset"
 	"gobacktrader/btutil"
 	"math"
@@ -64,5 +65,19 @@ func (t *Trade) GetLocalCurrencyConsideration() asset.Price {
 
 // PassesCompliance returns true if compliance passes, false otherwise.
 func (t Trade) PassesCompliance() (bool, error) {
+	portfolio := t.GetPortfolio()
+	if portfolio.NumComplianceRules() == 0 {
+		return true, nil // no rules are in place
+	}
+
+	portfolioCopy, err := portfolio.Copy()
+	if err != nil {
+		return false, err
+	}
+
+	if portfolioCopy.GetBroker() == nil {
+		return false, errors.New("portfolio has no assigned executing broker")
+	}
+
 	return true, nil
 }
