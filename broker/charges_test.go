@@ -64,6 +64,16 @@ func TestFixedRatePlusPercentageChargesBasic(t *testing.T) {
 		t.Errorf("Error in NewFixedRatePlusPercentageCharges - %s", err)
 	}
 
+	if charges.GetFixedAmount() != 20 {
+		t.Error("Unexpected fixed charge amount")
+	}
+	if charges.GetPercentage() != 0.01 {
+		t.Error("Unexpected percentage charge amount")
+	}
+	if charges.GetCurrencyCode() != "AUD" {
+		t.Error("Unexpected currency code")
+	}
+
 	// where an asset has no valid price this should return an error
 	err1 = charges.Charge(buyTrade)
 	err2 = charges.Charge(sellTrade)
@@ -165,5 +175,30 @@ func TestFixedRatePlusPercentageChargesUSD(t *testing.T) {
 	}
 	if portfolio.GetUnits(usd) != -43.75 {
 		t.Errorf("Unexpected USD cash - %0.2f", portfolio.GetUnits(usd))
+	}
+}
+
+func TestFixedRatePlusPercentageChargesError(t *testing.T) {
+	portfolio, err1 := asset.NewPortfolio("XXX", "AUD")
+	aud, err2 := asset.NewCash("AUD")
+	stock, err3 := asset.NewStock("ZZB US", "USD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in asset init - %s", err)
+	}
+
+	portfolio.Transfer(aud, 1000)
+	// apply a fixed rate of $20 plus 1% of the trade
+	charges, err := NewFixedRatePlusPercentageCharges(20, 0.01, "AUD")
+	if err != nil {
+		t.Errorf("Error in NewFixedRatePlusPercentageCharges - %s", err)
+	}
+
+	// trade an asset where we don't have the necessary fx rate (AUDUSD)
+	// to calculate USD value from AUD value.
+	trade := trade.NewTrade(portfolio, stock, +100.0)
+	err = charges.Charge(trade)
+	errStr := btutil.GetErrorString(err)
+	if errStr != "cannot apply charges to a trade with invalid value" {
+		t.Errorf("Unexpected error string - %s", err)
 	}
 }
