@@ -87,17 +87,8 @@ func TestGetLocalCurrencyConsideration(t *testing.T) {
 		t.Errorf("Error in asset init - %s", err)
 	}
 
-	buyTrade := Trade{
-		portfolio:   portfolio,
-		targetAsset: stock,
-		units:       +100.0,
-	}
-
-	sellTrade := Trade{
-		portfolio:   portfolio,
-		targetAsset: stock,
-		units:       -100.0,
-	}
+	buyTrade := NewTrade(portfolio, stock, +100.0)
+	sellTrade := NewTrade(portfolio, stock, -100.0)
 
 	// consideration should be invalid where we don't
 	// have a price.
