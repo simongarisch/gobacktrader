@@ -834,6 +834,10 @@ func TestPassesCompliance(t *testing.T) {
 		}
 	}
 
+	if portfolio1.NumComplianceRules() != 0 {
+		t.Error("There should be no compliance rules currenly attached to this portfolio")
+	}
+
 	// add a passing rule to portfolio1 and a
 	// failing rule to portfolio2
 	r1 := passingRule{}
@@ -864,6 +868,9 @@ func TestPassesCompliance(t *testing.T) {
 	}
 	if pass, _ := portfolio2.PassesCompliance(); pass {
 		t.Error("portfolio2 should fail compliance")
+	}
+	if portfolio1.NumComplianceRules() != 2 {
+		t.Error("There should be 2 compliance rules currenly attached to this portfolio")
 	}
 
 	// removing r3 should cause portfolio1 to pass

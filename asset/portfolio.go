@@ -303,6 +303,12 @@ func (p *Portfolio) Copy() (*Portfolio, error) {
 	return portfolioCopy, nil
 }
 
+// NumComplianceRules returns the number of compliance rules
+// attached to this portfolio.
+func (p *Portfolio) NumComplianceRules() int {
+	return len(p.complianceRules)
+}
+
 // HasComplianceRule returns true if a portfolio has some
 // compliance rule, false otherwise.
 func (p *Portfolio) HasComplianceRule(rule IComplianceRule) bool {
