@@ -19,7 +19,7 @@ func TestFillAtLast(t *testing.T) {
 	buyTrade := trade.NewTrade(portfolio, stock, +100.0)
 	sellTrade := trade.NewTrade(portfolio, stock, -100.0)
 
-	fillAtLast := FillAtLast{}
+	fillAtLast := NewFillAtLast()
 	fillAtLastWithSlippage := FillAtLastWithSlippage{slippage: 0.02}
 
 	// we need a valid price to calculate trade consideration
