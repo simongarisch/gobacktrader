@@ -3,6 +3,7 @@ package backtest
 import (
 	"fmt"
 	"gobacktrader/asset"
+	"gobacktrader/broker"
 	"gobacktrader/btutil"
 	"gobacktrader/events"
 )
@@ -47,6 +48,16 @@ func (backtest *Backtest) RegisterPortfolio(p *asset.Portfolio) error {
 	if backtest.HasPortfolio(p) {
 		return nil // portfolio is already registered
 	}
+
+	// set the default executing broker if none is provided
+	if p.GetBroker() == nil {
+		executingBroker := broker.NewBroker(
+			broker.NewNoCharges(),
+			broker.NewFillAtLast(),
+		)
+		p.SetBroker(executingBroker)
+	}
+
 	portfolioCode := p.GetCode()
 	if backtest.codeRegistered(portfolioCode) {
 		return fmt.Errorf("portfolio code '%s' is already in use and needs to be unique", portfolioCode)
