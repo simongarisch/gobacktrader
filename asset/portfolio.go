@@ -22,9 +22,19 @@ type IComplianceRule interface {
 	Passes(*Portfolio) (bool, error)
 }
 
+// ITrade defines the trade interface.
+type ITrade interface {
+	GetPortfolio() *Portfolio
+	GetAsset() IAssetReadOnly
+	GetUnits() float64
+	GetLocalCurrencyValue() Price
+	GetLocalCurrencyConsideration() Price
+	PassesCompliance() (bool, error)
+}
+
 // IBroker defines the broker interface.
 type IBroker interface {
-	Execute(interface{}) error
+	Execute(ITrade) error
 }
 
 // PortfolioSnapshot takes a snapshot of portfolio value and weights

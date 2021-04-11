@@ -1,18 +1,18 @@
 package broker
 
 import (
+	"gobacktrader/asset"
 	"gobacktrader/btutil"
-	"gobacktrader/trade"
 )
 
 // ChargesStrategy defines the interface for broker charges.
 type ChargesStrategy interface {
-	Charge(trade.Trade) error
+	Charge(asset.ITrade) error
 }
 
 // ExecutionStrategy defines the interface for broker execution.
 type ExecutionStrategy interface {
-	Execute(trade.Trade) error
+	Execute(asset.ITrade) error
 }
 
 // Broker defines an executing broker with associated charges.
@@ -22,15 +22,15 @@ type Broker struct {
 }
 
 // NewBroker returns a new Broker instance.
-func NewBroker(charges ChargesStrategy, execution ExecutionStrategy) Broker {
-	return Broker{
+func NewBroker(charges ChargesStrategy, execution ExecutionStrategy) *Broker {
+	return &Broker{
 		charges:   charges,
 		execution: execution,
 	}
 }
 
 // Execute will use our broker instance to execute a trade.
-func (b *Broker) Execute(trade trade.Trade) error {
+func (b *Broker) Execute(trade asset.ITrade) error {
 	err1 := b.execution.Execute(trade)
 	err2 := b.charges.Charge(trade)
 	return btutil.AnyValidError(err1, err2)

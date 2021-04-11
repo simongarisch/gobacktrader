@@ -2,8 +2,8 @@ package broker
 
 import (
 	"fmt"
+	"gobacktrader/asset"
 	"gobacktrader/btutil"
-	"gobacktrader/trade"
 )
 
 // FillAtLast executes a trade at the last available price.
@@ -15,7 +15,7 @@ func NewFillAtLast() FillAtLast {
 }
 
 // Execute executes a specific trade.
-func (e FillAtLast) Execute(trade trade.Trade) error {
+func (e FillAtLast) Execute(trade asset.ITrade) error {
 	consideration := trade.GetLocalCurrencyConsideration()
 	if !consideration.Valid {
 		tradeTicker := trade.GetAsset().GetTicker()
@@ -39,7 +39,7 @@ func NewFillAtLastWithSlippage(slippage float64) FillAtLastWithSlippage {
 }
 
 // Execute executes a specific trade with slippage.
-func (e FillAtLastWithSlippage) Execute(trade trade.Trade) error {
+func (e FillAtLastWithSlippage) Execute(trade asset.ITrade) error {
 	consideration := trade.GetLocalCurrencyConsideration()
 	if !consideration.Valid {
 		tradeTicker := trade.GetAsset().GetTicker()

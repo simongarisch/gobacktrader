@@ -3,7 +3,6 @@ package broker
 import (
 	"errors"
 	"gobacktrader/asset"
-	"gobacktrader/trade"
 	"math"
 )
 
@@ -17,7 +16,7 @@ func NewNoCharges() NoCharges {
 
 // Charge for the NoCharges strategy will apply no charges
 // and leave portfolio cash unchanged.
-func (c NoCharges) Charge(trade trade.Trade) error {
+func (c NoCharges) Charge(trade asset.ITrade) error {
 	return nil
 }
 
@@ -59,7 +58,7 @@ func (c FixedRatePlusPercentageCharges) GetCurrencyCode() string {
 // some fixed amount plus a percentage of the trade from portfolio
 // cash. You have the option to choose the currency code in which
 // this charge is applied.
-func (c FixedRatePlusPercentageCharges) Charge(trade trade.Trade) error {
+func (c FixedRatePlusPercentageCharges) Charge(trade asset.ITrade) error {
 	portfolio, targetAsset := trade.GetPortfolio(), trade.GetAsset()
 	tradeValue := trade.GetLocalCurrencyValue()
 	if !tradeValue.Valid {

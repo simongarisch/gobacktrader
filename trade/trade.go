@@ -15,8 +15,8 @@ type Trade struct {
 }
 
 // NewTrade returns a new Trade instance.
-func NewTrade(portfolio *asset.Portfolio, targetAsset asset.IAssetReadOnly, units float64) Trade {
-	return Trade{
+func NewTrade(portfolio *asset.Portfolio, targetAsset asset.IAssetReadOnly, units float64) *Trade {
+	return &Trade{
 		portfolio:   portfolio,
 		targetAsset: targetAsset,
 		units:       units,
@@ -69,7 +69,7 @@ func (t *Trade) GetLocalCurrencyConsideration() asset.Price {
 }
 
 // PassesCompliance returns true if compliance passes, false otherwise.
-func (t Trade) PassesCompliance() (bool, error) {
+func (t *Trade) PassesCompliance() (bool, error) {
 	portfolio := t.GetPortfolio()
 	if portfolio.NumComplianceRules() == 0 {
 		return true, nil // no rules are in place
