@@ -3,13 +3,15 @@ package trade
 import (
 	"gobacktrader/asset"
 	"gobacktrader/btutil"
+	"gobacktrader/compliance"
 	"testing"
 )
 
 func TestTradeInit(t *testing.T) {
 	portfolio, err1 := asset.NewPortfolio("XXX", "AUD")
 	stock, err2 := asset.NewStock("ZZB AU", "AUD")
-	if err := btutil.AnyValidError(err1, err2); err != nil {
+	aud, err3 := asset.NewCash("AUD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
 		t.Errorf("Error in asset init - %s", err)
 	}
 
@@ -27,6 +29,9 @@ func TestTradeInit(t *testing.T) {
 	}
 	if trade.GetUnits() != 100 {
 		t.Error("Unexpected units")
+	}
+	if cash, _ := trade.GetBaseCurrencyCash(); cash != aud {
+		t.Error("Unexpected base currency cash")
 	}
 }
 
@@ -120,5 +125,36 @@ func TestGetLocalCurrencyConsideration(t *testing.T) {
 	}
 	if consideration.Float64 != +250 {
 		t.Errorf("Unexpected consideration: wanted +250, got %0.2f", consideration.Float64)
+	}
+}
+
+func TestTradePassesCompliance(t *testing.T) {
+	portfolio, err1 := asset.NewPortfolio("XXX", "AUD")
+	stock, err2 := asset.NewStock("ZZB AU", "AUD")
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Errorf("Error in asset init - %s", err)
+	}
+
+	// with no compliance rules in place the portfolio should pass.
+	passesCompliance, err := portfolio.PassesCompliance()
+	if err != nil {
+		t.Errorf("Error in portfolio.PassesComplinace() - %s", err)
+	}
+	if !passesCompliance {
+		t.Error("Expecting a portfolio with no compliance rules to pass")
+	}
+
+	// no more than 100% of the portfolio in this stock
+	stockLimit := compliance.NewWeightLimit(stock, 1.0)
+	portfolio.AddComplianceRule(stockLimit)
+
+	// without a stock price or portfolio value we cannot calculate weights
+	// PassesCompliance should return an error
+
+	trade := NewTrade(portfolio, stock, +1000)
+	_, err = trade.PassesCompliance()
+	errStr := btutil.GetErrorString(err)
+	if errStr != "portfolio has no assigned executing broker" {
+		t.Errorf("Unexpected error string - %s", err)
 	}
 }

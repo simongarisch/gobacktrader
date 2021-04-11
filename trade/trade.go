@@ -38,6 +38,11 @@ func (t *Trade) GetUnits() float64 {
 	return t.units
 }
 
+// GetBaseCurrencyCash returns the cash base currency for this trade.
+func (t *Trade) GetBaseCurrencyCash() (asset.IAssetReadOnly, error) {
+	return asset.NewCash(t.targetAsset.GetBaseCurrency())
+}
+
 // GetLocalCurrencyValue returns the trade value.
 func (t *Trade) GetLocalCurrencyValue() asset.Price {
 	assetValue := t.targetAsset.GetValue()
@@ -79,5 +84,13 @@ func (t Trade) PassesCompliance() (bool, error) {
 		return false, errors.New("portfolio has no assigned executing broker")
 	}
 
-	return true, nil
+	// use this portfolio copy to mock execute the trade
+	// and check whether compliance passes after execution.
+	err1 := portfolioCopy.GetBroker().Execute(t)
+	passes, err2 := portfolioCopy.PassesCompliance()
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		return false, err
+	}
+
+	return passes, nil
 }
