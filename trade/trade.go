@@ -94,3 +94,27 @@ func (t *Trade) PassesCompliance() (bool, error) {
 
 	return passes, nil
 }
+
+// Execute will execute this trade if compliance passes.
+// Returns a boolean representing whether the trade has
+// been executed along with an error.
+func (t *Trade) Execute() (bool, error) {
+	// check if compliance passes
+	passes, err := t.PassesCompliance()
+	if err != nil {
+		return false, err
+	}
+
+	if !passes {
+		return false, nil // do not execute this trade
+	}
+
+	// then pass to the broker for execution
+	executingBroker := t.GetPortfolio().GetBroker()
+	err = executingBroker.Execute(t)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
