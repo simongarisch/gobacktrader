@@ -111,6 +111,10 @@ func (t *Trade) Execute() (bool, error) {
 
 	// then pass to the broker for execution
 	executingBroker := t.GetPortfolio().GetBroker()
+	if executingBroker == nil {
+		return false, errors.New("portfolio requires an executing broker to call trade.Execute()")
+	}
+
 	err = executingBroker.Execute(t)
 	if err != nil {
 		return false, err
