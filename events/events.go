@@ -10,7 +10,23 @@ import (
 type IEvent interface {
 	GetTime() time.Time
 	IsProcessed() bool
-	Process()
+	Process() error
+}
+
+// BaseEvent defines the generic attributes of an event.
+type BaseEvent struct {
+	eventTime time.Time
+	processed bool
+}
+
+// GetTime returns the event time.
+func (e BaseEvent) GetTime() time.Time {
+	return e.eventTime
+}
+
+// IsProcessed returns true if an event has been processed, false otherwise.
+func (e BaseEvent) IsProcessed() bool {
+	return e.processed
 }
 
 // Events represents a collection of events.

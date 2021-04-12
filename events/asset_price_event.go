@@ -1,41 +1,30 @@
 package events
 
 import (
-	"time"
 	"gobacktrader/asset"
+	"time"
 )
 
 // AssetPriceEvent defines price events for generic assets.
 type AssetPriceEvent struct {
+	BaseEvent
 	targetAsset asset.IAssetWriteOnly
-	eventTime time.Time
-	price asset.Price
-	processed bool
+	price       asset.Price
 }
 
 // NewAssetPriceEvent returns a new instance of an unprocessed
 // AssetPriceEvent object.
 func NewAssetPriceEvent(targetAsset asset.IAssetWriteOnly, eventTime time.Time, price asset.Price) AssetPriceEvent {
 	return AssetPriceEvent{
+		BaseEvent:   BaseEvent{eventTime: eventTime, processed: false},
 		targetAsset: targetAsset,
-		eventTime: eventTime,
-		price: price,
-		processed: false,
+		price:       price,
 	}
 }
 
-// GetTime returns the event time.
-func (e AssetPriceEvent) GetTime() time.Time {
-	return e.eventTime
-}
-
-// IsProcessed returns true if an event has been processed, false otherwise.
-func (e AssetPriceEvent) IsProcessed() bool {
-	return e.processed
-}
-
 // Process will action the asset price event.
-func (e *AssetPriceEvent) Process() {
+func (e *AssetPriceEvent) Process() error {
 	e.targetAsset.SetPrice(e.price)
 	e.processed = true
+	return nil
 }

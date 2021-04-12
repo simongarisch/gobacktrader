@@ -15,16 +15,17 @@ func newTestEvent(eventTime time.Time) testEvent {
 	return testEvent{eventTime: eventTime, isProcessed: false}
 }
 
-func (t testEvent) GetTime() time.Time {
+func (t *testEvent) GetTime() time.Time {
 	return t.eventTime
 }
 
-func (t testEvent) IsProcessed() bool {
+func (t *testEvent) IsProcessed() bool {
 	return t.isProcessed
 }
 
-func (t *testEvent) Process() {
+func (t *testEvent) Process() error {
 	t.isProcessed = true
+	return nil
 }
 
 func (t *testEvent) in(slice []IEvent) bool {
