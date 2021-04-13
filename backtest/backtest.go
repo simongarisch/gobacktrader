@@ -100,3 +100,8 @@ func (backtest *Backtest) HasAsset(a asset.IAssetReadOnly) bool {
 	}
 	return false
 }
+
+// AddEvent adds a new event to the backtest events collection.
+func (backtest *Backtest) AddEvent(event events.IEvent) {
+	backtest.events.Add(event)
+}
