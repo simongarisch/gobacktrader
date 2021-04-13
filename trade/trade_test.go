@@ -2,6 +2,7 @@ package trade
 
 import (
 	"gobacktrader/asset"
+	"gobacktrader/broker"
 	"gobacktrader/btutil"
 	"gobacktrader/compliance"
 	"testing"
@@ -156,5 +157,96 @@ func TestTradePassesCompliance(t *testing.T) {
 	errStr := btutil.GetErrorString(err)
 	if errStr != "portfolio has no assigned executing broker" {
 		t.Errorf("Unexpected error string - %s", err)
+	}
+}
+
+func TestTradeExecute(t *testing.T) {
+	portfolio, err1 := asset.NewPortfolio("XXX", "AUD")
+	stock, err2 := asset.NewStock("ZZB AU", "AUD")
+	cash, err3 := asset.NewCash("AUD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in asset init - %s", err)
+	}
+
+	portfolio.Transfer(cash, 1000)
+	trade := NewTrade(portfolio, stock, 100)
+
+	// without an executing broker we cannot execute the trade
+	executed, err := trade.Execute()
+	if executed {
+		t.Error("This trade should not have been executed")
+	}
+	errStr := btutil.GetErrorString(err)
+	if errStr != "portfolio requires an executing broker to call trade.Execute()" {
+		t.Errorf("Unexpected error string - %s", errStr)
+	}
+
+	executingBroker := broker.NewBroker(
+		broker.NewNoCharges(),
+		broker.NewFillAtLast(),
+	)
+	portfolio.SetBroker(executingBroker)
+
+	// however we still need a price for the stock to calculate trade consideration
+	executed, err = trade.Execute()
+	if executed {
+		t.Error("This trade should not have been executed")
+	}
+	errStr = btutil.GetErrorString(err)
+	if errStr != "'ZZB AU' cannot execute a trade with invalid consideration" {
+		t.Errorf("Unexpected error string - %s", errStr)
+	}
+
+	// set the stock price after which we should be able to
+	// execute the trade
+	stock.SetPrice(asset.Price{Float64: 2.50, Valid: true})
+
+	executed, err = trade.Execute()
+	if !executed {
+		t.Error("This trade should have been executed")
+	}
+	if err != nil {
+		t.Errorf("Error in trade.Execute() - %s", err)
+	}
+	if portfolio.GetUnits(stock) != 100 {
+		t.Error("Unexpected stock position")
+	}
+	if portfolio.GetUnits(cash) != 750 {
+		t.Error("Unexpected cash position")
+	}
+
+	// if we set a position limit at 100 shares
+	// we should not be able to execute the same trade again
+	stockLimit := compliance.NewUnitLimit(stock, 100)
+	portfolio.AddComplianceRule(stockLimit)
+	executed, err = trade.Execute()
+	if executed {
+		t.Error("This trade should not have been executed")
+	}
+	if err != nil {
+		t.Errorf("Error in trade.Execute() - %s", err)
+	}
+	if portfolio.GetUnits(stock) != 100 {
+		t.Error("Unexpected stock position")
+	}
+	if portfolio.GetUnits(cash) != 750 {
+		t.Error("Unexpected cash position")
+	}
+
+	// set this to a higher limit
+	portfolio.RemoveComplianceRule(stockLimit)
+	stockLimit = compliance.NewUnitLimit(stock, 200)
+	executed, err = trade.Execute()
+	if !executed {
+		t.Error("This trade should have been executed")
+	}
+	if err != nil {
+		t.Errorf("Error in trade.Execute() - %s", err)
+	}
+	if portfolio.GetUnits(stock) != 200 {
+		t.Error("Unexpected stock position")
+	}
+	if portfolio.GetUnits(cash) != 500 {
+		t.Error("Unexpected cash position")
 	}
 }

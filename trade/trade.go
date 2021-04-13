@@ -86,7 +86,8 @@ func (t *Trade) PassesCompliance() (bool, error) {
 
 	// use this portfolio copy to mock execute the trade
 	// and check whether compliance passes after execution.
-	err1 := portfolioCopy.GetBroker().Execute(t)
+	mockTrade := t.ChangePortfolio(portfolioCopy)
+	err1 := portfolioCopy.GetBroker().Execute(mockTrade)
 	passes, err2 := portfolioCopy.PassesCompliance()
 	if err := btutil.AnyValidError(err1, err2); err != nil {
 		return false, err
@@ -121,4 +122,10 @@ func (t *Trade) Execute() (bool, error) {
 	}
 
 	return true, nil
+}
+
+// ChangePortfolio returns a copy of the trade but for a different portfolio.
+func (t Trade) ChangePortfolio(portfolio *asset.Portfolio) *Trade {
+	t.portfolio = portfolio
+	return &t
 }
