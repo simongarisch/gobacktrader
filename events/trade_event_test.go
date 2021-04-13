@@ -17,12 +17,6 @@ func TestTradeEventBasic(t *testing.T) {
 		t.Errorf("Error in asset init - %s", err)
 	}
 
-	executingBroker := broker.NewBroker(
-		broker.NewNoCharges(),
-		broker.NewFillAtLast(),
-	)
-
-	portfolio.SetBroker(executingBroker)
 	portfolio.Transfer(aud, 1000)
 	stock.SetPrice(asset.Price{Float64: 2.50, Valid: true})
 	trade := trade.NewTrade(portfolio, stock, 100)
@@ -35,8 +29,26 @@ func TestTradeEventBasic(t *testing.T) {
 	if event.IsProcessed() {
 		t.Error("Event should not yet be processed")
 	}
+	if event.GetTrade() != trade {
+		t.Error("Unexpected trade for this event")
+	}
 
+	// the portfolio will require an executing broker
+	// in order to execute the trade.
+	portfolio.SetBroker(nil)
 	err := event.Process()
+	errStr := btutil.GetErrorString(err)
+	if errStr != "portfolio requires an executing broker to call trade.Execute()" {
+		t.Errorf("Unexpected error string - %s", errStr)
+	}
+
+	executingBroker := broker.NewBroker(
+		broker.NewNoCharges(),
+		broker.NewFillAtLast(),
+	)
+	portfolio.SetBroker(executingBroker)
+
+	err = event.Process()
 	if err != nil {
 		t.Errorf("Error in event.Process() - %s", err)
 	}
