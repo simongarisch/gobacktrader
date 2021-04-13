@@ -7,15 +7,15 @@ import (
 
 type myStrategy struct{}
 
-func (s myStrategy) GenerateTrades() []*trade.Trade {
-	return []*trade.Trade{nil, nil}
+func (s myStrategy) GenerateTrades() ([]*trade.Trade, error) {
+	return []*trade.Trade{nil, nil}, nil
 }
 
 func TestStrategy(t *testing.T) {
-	var strategy Strategy
+	var strategy IStrategy
 
 	strategy = myStrategy{}
-	trades := strategy.GenerateTrades()
+	trades, _ := strategy.GenerateTrades()
 	if len(trades) != 2 {
 		t.Error("Expecting two trades to be returned")
 	}
