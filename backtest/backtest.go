@@ -6,6 +6,7 @@ import (
 	"gobacktrader/broker"
 	"gobacktrader/btutil"
 	"gobacktrader/events"
+	"time"
 )
 
 // Backtest collects the assets we want to test and
@@ -14,11 +15,12 @@ type Backtest struct {
 	portfolios []*asset.Portfolio
 	assets     []asset.IAssetReadOnly
 	events     events.Events
+	strategy   IStrategy
 }
 
 // NewBacktest returns a new Backtest instance.
-func NewBacktest() Backtest {
-	return Backtest{}
+func NewBacktest(strategy IStrategy) Backtest {
+	return Backtest{strategy: strategy}
 }
 
 // codeRegistered checks if a code is registered either
@@ -104,4 +106,51 @@ func (backtest *Backtest) HasAsset(a asset.IAssetReadOnly) bool {
 // AddEvent adds a new event to the backtest events collection.
 func (backtest *Backtest) AddEvent(event events.IEvent) {
 	backtest.events.Add(event)
+}
+
+// Run will execute our backtest.
+func (backtest *Backtest) Run() error {
+	for { // while we have events to process
+		if backtest.events.IsEmpty() {
+			break
+		}
+
+		// process events for the next time step
+		var currentTime time.Time
+		var eventsToProcess []events.IEvent
+		eventsToProcess, err := backtest.events.FetchNextGroup()
+		if err != nil {
+			return err
+		}
+
+		currentTime = eventsToProcess[0].GetTime()
+		for _, event := range eventsToProcess {
+			if err := event.Process(); err != nil {
+				return err
+			}
+		}
+
+		// now that events have been processed for this time
+		// we'll check to see if our strategy generates trades
+		trades, err := backtest.strategy.GenerateTrades()
+		if err != nil {
+			return err
+		}
+		for _, trade := range trades {
+			if _, err := trade.Execute(); err != nil {
+				return err
+			}
+		}
+
+		// once all events have been processed for this step
+		// then take snapshots
+		for _, asset := range backtest.assets {
+			asset.TakeSnapshot(currentTime, asset)
+		}
+		for _, portfolio := range backtest.portfolios {
+			portfolio.TakeSnapshot(currentTime)
+		}
+	}
+
+	return nil
 }

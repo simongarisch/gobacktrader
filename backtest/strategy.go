@@ -8,3 +8,25 @@ import "gobacktrader/trade"
 type IStrategy interface {
 	GenerateTrades() ([]*trade.Trade, error)
 }
+
+type generateTradesFunc func() ([]*trade.Trade, error)
+
+// Strategy has a function field to generate trades.
+type Strategy struct {
+	generateTradesFunc
+}
+
+// NewStrategy returns a new strategy instance.
+func NewStrategy(f generateTradesFunc) *Strategy {
+	return &Strategy{generateTradesFunc: f}
+}
+
+// SetGenerateTrades sets our generate trades strategy function.
+func (s *Strategy) SetGenerateTrades(f generateTradesFunc) {
+	s.generateTradesFunc = f
+}
+
+// GenerateTrades returns a slice of trades to execute.
+func (s *Strategy) GenerateTrades() ([]*trade.Trade, error) {
+	return s.generateTradesFunc()
+}

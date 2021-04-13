@@ -3,11 +3,14 @@ package backtest
 import (
 	"gobacktrader/asset"
 	"gobacktrader/btutil"
+	"gobacktrader/events"
+	"gobacktrader/trade"
 	"testing"
+	"time"
 )
 
 func TestRegisterPortfolio(t *testing.T) {
-	backtest := NewBacktest()
+	backtest := NewBacktest(myStrategy{})
 
 	portfolio, err := asset.NewPortfolio("XXX", "AUD")
 	if err != nil {
@@ -67,5 +70,159 @@ func TestRegisterPortfolio(t *testing.T) {
 	}
 	if errStr2 != "asset ticker 'ZZB AU' is already in use and needs to be unique" {
 		t.Errorf("Unexpected error string '%s'", errStr2)
+	}
+}
+
+func TestBacktestBasicStrategy(t *testing.T) {
+	// initialise our portfolio and assets
+	portfolio, err1 := asset.NewPortfolio("XXX", "AUD")
+	stock, err2 := asset.NewStock("ZZB AU", "AUD")
+	cash, err3 := asset.NewCash("AUD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Errorf("Error in asset creation - %s", err)
+	}
+
+	// create our trading strategy
+	generateTrades := func() ([]*trade.Trade, error) {
+		var trades []*trade.Trade
+		stockPrice := stock.GetPrice()
+		if stockPrice.Valid {
+			if stockPrice.Float64 <= 2 {
+				newTrade := trade.NewTrade(portfolio, stock, 100)
+				trades = append(trades, newTrade)
+			}
+		}
+		return trades, nil
+	}
+
+	strategy := NewStrategy(generateTrades)
+
+	// seed the portfolio
+	portfolio.Transfer(cash, 1000)
+
+	// create our backtest instance, register assets
+	backtest := NewBacktest(strategy)
+	backtest.RegisterPortfolio(portfolio)
+	backtest.RegisterAsset(stock)
+	backtest.RegisterAsset(cash)
+
+	// create events to process
+	t1 := time.Date(2021, time.March, 13, 0, 0, 0, 0, time.UTC)
+	t2 := time.Date(2021, time.March, 14, 0, 0, 0, 0, time.UTC)
+	t3 := time.Date(2021, time.March, 15, 0, 0, 0, 0, time.UTC)
+
+	e1 := events.NewAssetPriceEvent(stock, t1, asset.Price{Float64: 2.10, Valid: true})
+	e2 := events.NewAssetPriceEvent(stock, t2, asset.Price{Float64: 2.00, Valid: true})
+	e3 := events.NewAssetPriceEvent(stock, t3, asset.Price{Float64: 2.50, Valid: true})
+
+	for _, event := range []events.IEvent{&e1, &e2, &e3} {
+		backtest.AddEvent(event)
+	}
+
+	// we'd previously set our strategy to buy 100 shares whenever the stock price went <= $2
+	// the backtest should start with a stock position of zero at t1, buy 100 shares at t2
+	// and hold at t3.
+	err := backtest.Run()
+	if err != nil {
+		t.Errorf("Error in backtest.Run() - %s", err)
+	}
+
+	// check the portfolio units and value
+	stockPosition := portfolio.GetUnits(stock)
+	cashPosition := portfolio.GetUnits(cash)
+	if stockPosition != 100 {
+		t.Errorf("Unexpected stock position - wanted 100 got %0.2f", stockPosition)
+	}
+	if cashPosition != 800 {
+		t.Errorf("Unexpected cash position - wanted 800, got %0.2f", cashPosition)
+	}
+	portfolioValue, err := portfolio.GetValue()
+	if err != nil {
+		t.Errorf("Error in portfolio.GetValue() - %s", err)
+	}
+	if !portfolioValue.Valid {
+		t.Error("Expecting a valid portfolio value")
+	}
+	if portfolioValue.Float64 != 1050 { // 800 cash + 100 * 2.50 in stock
+		t.Errorf("Unexpected portfolio value - wanted 1050, got %0.2f", portfolioValue.Float64)
+	}
+
+	// check the portfolio history
+	portfolioHistory := portfolio.GetHistory()
+	psnap1, _ := portfolioHistory[t1]
+	psnap2, _ := portfolioHistory[t2]
+	psnap3, _ := portfolioHistory[t3]
+
+	if !psnap1.GetTime().Equal(t1) {
+		t.Error("Unexpected time for psnap1")
+	}
+	if psnap1.GetValue().Float64 != 1000 {
+		t.Errorf("Unexpected value for psnap1 - wanted 1000, got %0.2f", psnap1.GetValue().Float64)
+	}
+
+	if !psnap2.GetTime().Equal(t2) {
+		t.Error("Unexpected time for psnap2")
+	}
+	if psnap2.GetValue().Float64 != 1000 {
+		t.Errorf("Unexpected value for psnap2 - wanted 1000, got %0.2f", psnap2.GetValue().Float64)
+	}
+
+	if !psnap3.GetTime().Equal(t3) {
+		t.Error("Unexpected time for psnap3")
+	}
+	if psnap3.GetValue().Float64 != 1050 {
+		t.Errorf("Unexpected value for psnap3 - wanted 1050, got %0.2f", psnap3.GetValue().Float64)
+	}
+
+	// check the stock price history
+	stockHistory := stock.GetHistory()
+	snap1, _ := stockHistory[t1]
+	snap2, _ := stockHistory[t2]
+	snap3, _ := stockHistory[t3]
+	if !snap1.GetTime().Equal(t1) {
+		t.Error("snap1 - unexpected time.")
+	}
+	if snap1.GetPrice().Float64 != 2.1 {
+		t.Error("snap1 - unexpected price.")
+	}
+
+	if !snap2.GetTime().Equal(t2) {
+		t.Error("snap2 - unexpected time.")
+	}
+	if snap2.GetPrice().Float64 != 2.0 {
+		t.Error("snap2 - unexpected price.")
+	}
+
+	if !snap3.GetTime().Equal(t3) {
+		t.Error("snap3 - unexpected time.")
+	}
+	if snap3.GetPrice().Float64 != 2.5 {
+		t.Error("snap3 - unexpected price.")
+	}
+
+	// check the cash history
+	cashHistory := cash.GetHistory()
+	snap1, _ = cashHistory[t1]
+	snap2, _ = cashHistory[t2]
+	snap3, _ = cashHistory[t3]
+	if !snap1.GetTime().Equal(t1) {
+		t.Error("snap1 - unexpected time.")
+	}
+	if snap1.GetPrice().Float64 != 1.0 {
+		t.Error("snap1 - unexpected price.")
+	}
+
+	if !snap2.GetTime().Equal(t2) {
+		t.Error("snap2 - unexpected time.")
+	}
+	if snap2.GetPrice().Float64 != 1.0 {
+		t.Error("snap2 - unexpected price.")
+	}
+
+	if !snap3.GetTime().Equal(t3) {
+		t.Error("snap3 - unexpected time.")
+	}
+	if snap3.GetPrice().Float64 != 1.0 {
+		t.Error("snap3 - unexpected price.")
 	}
 }
