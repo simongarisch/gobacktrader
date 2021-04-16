@@ -12,6 +12,9 @@ import (
 // Weight represents an asset weight for a given portfolio.
 type Weight sql.NullFloat64
 
+// PortfolioHistory defines the structure of our portfolio history snapshots.
+type PortfolioHistory map[time.Time]PortfolioSnapshot
+
 var (
 	nullWeight        = Weight{Float64: 0.0, Valid: false}
 	errWrongPortfolio = errors.New("applying to the wrong portfolio")
@@ -76,7 +79,7 @@ type Portfolio struct {
 	baseCurrency    string
 	positions       map[IAssetReadOnly]*Position
 	fxRates         *FxRates
-	history         map[time.Time]PortfolioSnapshot
+	history         PortfolioHistory
 	complianceRules []IComplianceRule
 	broker          IBroker
 }
@@ -307,7 +310,7 @@ func (p *Portfolio) TakeSnapshot(timestamp time.Time) error {
 }
 
 // GetHistory returns the portfolio snapshot history.
-func (p Portfolio) GetHistory() map[time.Time]PortfolioSnapshot {
+func (p Portfolio) GetHistory() PortfolioHistory {
 	return p.history
 }
 
