@@ -8,6 +8,9 @@ import (
 // Price is the unit of measurement for price and value.
 type Price sql.NullFloat64
 
+// History defines the structure of our price history snapshots.
+type History map[time.Time]PriceSnapshot
+
 var (
 	nullPrice = Price{Float64: 0.0, Valid: false}
 	nullValue = Price{Float64: 0.0, Valid: false}
@@ -62,12 +65,12 @@ func (h *priceHistory) GetPrice() Price {
 func (h *priceHistory) TakeSnapshot(timestamp time.Time, asset iHasGetPrice) {
 	snap := NewPriceSnapshot(timestamp, asset)
 	if h.history == nil {
-		h.history = make(map[time.Time]PriceSnapshot)
+		h.history = make(History)
 	}
 	h.history[timestamp] = snap
 }
 
 // GetHistory returns the record of asset history.
-func (h *priceHistory) GetHistory() map[time.Time]PriceSnapshot {
+func (h *priceHistory) GetHistory() History {
 	return h.history
 }
