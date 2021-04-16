@@ -15,5 +15,4 @@ REM echo %cov%
 
 gopherbadger -md="README.md" -manualcov=%cov%
 
-REM delete coverage.txt
 DEL coverage.txt
