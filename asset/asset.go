@@ -26,7 +26,7 @@ type IAssetReadOnly interface {
 	GetPrice() Price
 	GetValue() Price
 	TakeSnapshot(time.Time, iHasGetPrice)
-	GetHistory() map[time.Time]priceSnapshot
+	GetHistory() map[time.Time]PriceSnapshot
 }
 
 // IAssetWriteOnly defines the interface for write only assets.
