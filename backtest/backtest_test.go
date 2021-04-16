@@ -5,6 +5,7 @@ import (
 	"gobacktrader/btutil"
 	"gobacktrader/events"
 	"gobacktrader/trade"
+	"os"
 	"testing"
 	"time"
 )
@@ -12,14 +13,10 @@ import (
 func TestRegisterPortfolio(t *testing.T) {
 	backtest := NewBacktest(myStrategy{})
 
-	portfolio, err := asset.NewPortfolio("XXX", "AUD")
-	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
-	}
-
-	stock, err := asset.NewStock("ZZB AU", "AUD")
-	if err != nil {
-		t.Errorf("Error in NewStock - %s", err)
+	portfolio, err1 := asset.NewPortfolio("XXX", "AUD")
+	stock, err2 := asset.NewStock("ZZB AU", "AUD")
+	if err := btutil.AnyValidError(err1, err2); err != nil {
+		t.Fatalf("Error in asset init - %s", err)
 	}
 
 	if backtest.HasPortfolio(portfolio) {
@@ -29,10 +26,10 @@ func TestRegisterPortfolio(t *testing.T) {
 		t.Error("Backtest should not have asset registered.")
 	}
 
-	err1 := backtest.RegisterPortfolio(portfolio)
-	err2 := backtest.RegisterAsset(stock)
+	err1 = backtest.RegisterPortfolio(portfolio)
+	err2 = backtest.RegisterAsset(stock)
 	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Error in backtest.Register - %s", err)
+		t.Fatalf("Error in backtest.Register - %s", err)
 	}
 
 	if !backtest.HasPortfolio(portfolio) {
@@ -79,7 +76,7 @@ func TestBacktestBasicStrategy(t *testing.T) {
 	stock, err2 := asset.NewStock("ZZB AU", "AUD")
 	cash, err3 := asset.NewCash("AUD")
 	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
-		t.Errorf("Error in asset creation - %s", err)
+		t.Fatalf("Error in asset creation - %s", err)
 	}
 
 	// create our trading strategy
@@ -124,7 +121,7 @@ func TestBacktestBasicStrategy(t *testing.T) {
 	// and hold at t3.
 	err := backtest.Run()
 	if err != nil {
-		t.Errorf("Error in backtest.Run() - %s", err)
+		t.Fatalf("Error in backtest.Run() - %s", err)
 	}
 
 	// check the portfolio units and value
@@ -224,5 +221,31 @@ func TestBacktestBasicStrategy(t *testing.T) {
 	}
 	if snap3.GetPrice().Float64 != 1.0 {
 		t.Error("snap3 - unexpected price.")
+	}
+
+	// check the snapshotTimes
+	snapshotTimes := backtest.GetSnapshotTimes()
+	if len(snapshotTimes) != 3 {
+		t.Fatal("Expecting 3 times to be returned")
+	}
+	if !snapshotTimes[0].Equal(t1) {
+		t.Error("Unexpected first time")
+	}
+	if !snapshotTimes[1].Equal(t2) {
+		t.Error("Unexpected second time")
+	}
+	if !snapshotTimes[2].Equal(t3) {
+		t.Error("Unexpected third time")
+	}
+
+	// write this history to csv
+	err = backtest.HistoryToCsv("test")
+	if err != nil {
+		t.Fatalf("Error in HistoryToCsv - %s", err)
+	}
+
+	err = os.Remove("test.csv")
+	if err != nil {
+		t.Fatal(err)
 	}
 }

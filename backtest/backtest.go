@@ -1,21 +1,25 @@
 package backtest
 
 import (
+	"encoding/csv"
 	"fmt"
 	"gobacktrader/asset"
 	"gobacktrader/broker"
 	"gobacktrader/btutil"
 	"gobacktrader/events"
+	"os"
+	"strings"
 	"time"
 )
 
 // Backtest collects the assets we want to test and
 // records history as backtest events are processed.
 type Backtest struct {
-	portfolios []*asset.Portfolio
-	assets     []asset.IAssetReadOnly
-	events     events.Events
-	strategy   IStrategy
+	portfolios    []*asset.Portfolio
+	assets        []asset.IAssetReadOnly
+	events        events.Events
+	strategy      IStrategy
+	snapshotTimes []time.Time
 }
 
 // NewBacktest returns a new Backtest instance.
@@ -110,6 +114,7 @@ func (backtest *Backtest) AddEvent(event events.IEvent) {
 
 // Run will execute our backtest.
 func (backtest *Backtest) Run() error {
+	backtest.snapshotTimes = []time.Time{}
 	for { // while we have events to process
 		if backtest.events.IsEmpty() {
 			break
@@ -144,11 +149,101 @@ func (backtest *Backtest) Run() error {
 
 		// once all events have been processed for this step
 		// then take snapshots
+		backtest.snapshotTimes = append(backtest.snapshotTimes, currentTime)
 		for _, asset := range backtest.assets {
 			asset.TakeSnapshot(currentTime, asset)
 		}
 		for _, portfolio := range backtest.portfolios {
 			portfolio.TakeSnapshot(currentTime)
+		}
+	}
+
+	return nil
+}
+
+// GetSnapshotTimes returns the snapshot times for our backtest.
+func (backtest Backtest) GetSnapshotTimes() []time.Time {
+	return backtest.snapshotTimes
+}
+
+func cleanCode(code string) string {
+	return strings.ToUpper(strings.ReplaceAll(code, " ", "_"))
+}
+
+// HistoryToCsv will write the backtest history to a csv file.
+func (backtest *Backtest) HistoryToCsv(filePath string) error {
+	if !strings.HasSuffix(filePath, ".csv") {
+		filePath = filePath + ".csv"
+	}
+	snapshotTimes := backtest.snapshotTimes
+
+	// create the headers for our csv file
+	headers := []string{"TimeStamp"}
+	for _, portfolio := range backtest.portfolios {
+		header := "PORTFOLIO_" + cleanCode(portfolio.GetCode()) + "_VALUE"
+		headers = append(headers, header)
+	}
+	for _, asset := range backtest.assets {
+		header := cleanCode(asset.GetTicker()) + "_PRICE"
+		headers = append(headers, header)
+	}
+
+	file, err := os.Create(filePath)
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// write the headers
+	if err := writer.Write(headers); err != nil {
+		return (err)
+	}
+
+	// collect the portfolio and asset price history
+	var portfolioHistories []asset.PortfolioHistory
+	var assetHistories []asset.History
+	for _, portfolio := range backtest.portfolios {
+		portfolioHistories = append(portfolioHistories, portfolio.GetHistory())
+	}
+	for _, asset := range backtest.assets {
+		assetHistories = append(assetHistories, asset.GetHistory())
+	}
+
+	// and write this history to csv
+	for _, snapshotTime := range snapshotTimes {
+		row := []string{snapshotTime.String()}
+
+		// add portfolio values and asset prices to our row
+		for _, portfolioHistory := range portfolioHistories {
+			valueString := "NA"
+			portfolioSnapshot, ok := portfolioHistory[snapshotTime]
+			if ok {
+				portfolioValue := portfolioSnapshot.GetValue()
+				if portfolioValue.Valid {
+					valueString = fmt.Sprintf("%0.2f", portfolioValue.Float64)
+				}
+			}
+			row = append(row, valueString)			
+		}
+
+		for _, assetHistory := range assetHistories {
+			valueString := "NA"
+			assetSnapshot, ok := assetHistory[snapshotTime]
+			if ok {
+				assetPrice := assetSnapshot.GetPrice()
+				if assetPrice.Valid {
+					valueString = fmt.Sprintf("%0.2f", assetPrice.Float64)
+				}
+			}
+			row = append(row, valueString)
+		}
+
+		// write this row to csv
+		if err := writer.Write(row); err != nil {
+			return (err)
 		}
 	}
 
