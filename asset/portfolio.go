@@ -141,6 +141,11 @@ func (p *Portfolio) GetCode() string {
 	return p.code
 }
 
+// GetTicker returns the portfolio code
+func (p *Portfolio) GetTicker() string {
+	return p.GetCode()
+}
+
 // GetBaseCurrency returns the base currency for our portfolio.
 func (p *Portfolio) GetBaseCurrency() string {
 	return p.baseCurrency

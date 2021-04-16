@@ -10,10 +10,13 @@ import (
 func TestNewPortfolio(t *testing.T) {
 	p, err := NewPortfolio("XXX", "AUD")
 	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 	if p.GetCode() != "XXX" {
 		t.Error("Unexpected portfolio code.")
+	}
+	if p.GetTicker() != p.GetCode() {
+		t.Error("Unexpected portfolio ticker")
 	}
 	if p.GetBaseCurrency() != "AUD" {
 		t.Error("Unexpected base currency")
@@ -26,7 +29,7 @@ func TestNewPortfolio(t *testing.T) {
 func TestPortfolioValuation(t *testing.T) {
 	p, err := NewPortfolio("XXX", "AUD")
 	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 
 	// portfolios should have a zero value to start with
@@ -44,7 +47,7 @@ func TestPortfolioValuation(t *testing.T) {
 	// Start adding positions
 	a, err := NewStock("ZZB AU", "AUD")
 	if err != nil {
-		t.Errorf("Error in NewStock - %s", err)
+		t.Fatalf("Error in NewStock - %s", err)
 	}
 	if p.HasAsset(a) {
 		t.Error("The portfolio shouldn't have this asset position yet.")
@@ -87,7 +90,7 @@ func TestPortfolioValuation(t *testing.T) {
 func TestGetWeight(t *testing.T) {
 	p, err := NewPortfolio("XXX", "AUD")
 	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 
 	a, _ := NewStock("AAA AU", "AUD")
@@ -99,7 +102,7 @@ func TestGetWeight(t *testing.T) {
 	stock, err1 := NewStock("ZZB AU", "AUD")
 	cash, err2 := NewCash("AUD")
 	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Error in portfolio asset creation - %s", err)
+		t.Fatalf("Error in portfolio asset creation - %s", err)
 	}
 
 	// put 100% of the portfolio weight in our stock
@@ -107,7 +110,7 @@ func TestGetWeight(t *testing.T) {
 	p.ModifyPositions(stock, 100)
 	weight, err := p.GetWeight(stock)
 	if err != nil {
-		t.Errorf("Error in GetWeight - %s", err)
+		t.Fatalf("Error in GetWeight - %s", err)
 	}
 	if weight.Float64 != 1.0 {
 		t.Error("Expecting a stock weight of 100%")
@@ -115,7 +118,7 @@ func TestGetWeight(t *testing.T) {
 
 	weight, err = p.GetWeight(cash)
 	if err != nil {
-		t.Errorf("Error in GetWeight - %s", err)
+		t.Fatalf("Error in GetWeight - %s", err)
 	}
 	if weight.Float64 != 0.0 {
 		t.Error("Expecting a zero weight in cash")
@@ -132,7 +135,7 @@ func TestGetWeight(t *testing.T) {
 	// stock weight = 80%, cash weight = 20%
 	weight, err = p.GetWeight(stock)
 	if err != nil {
-		t.Errorf("Error in GetWeight - %s", err)
+		t.Fatalf("Error in GetWeight - %s", err)
 	}
 	if weight.Float64 != 0.8 {
 		t.Error("Expecting a stock weight of 80%")
@@ -140,7 +143,7 @@ func TestGetWeight(t *testing.T) {
 
 	weight, err = p.GetWeight(cash)
 	if err != nil {
-		t.Errorf("Error in GetWeight - %s", err)
+		t.Fatalf("Error in GetWeight - %s", err)
 	}
 	if weight.Float64 != 0.2 {
 		t.Error("Expecting a cash weight of 20%")
@@ -157,14 +160,14 @@ func TestPortfolioValuationCurrency(t *testing.T) {
 	p1, err1 := NewPortfolio("XXX", "AUD")
 	p2, err2 := NewPortfolio("YYY", "USD")
 	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 
 	// create a stock
 	stock, err1 := NewStock("ZZB AU", "AUD")
 	cash, err2 := NewCash("AUD")
 	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Error in portfolio asset creation - %s", err)
+		t.Fatalf("Error in portfolio asset creation - %s", err)
 	}
 
 	// Give both p1 and p2 200 shares of stock and $100 cash.
@@ -212,27 +215,15 @@ func TestPortfolioValuationCurrency(t *testing.T) {
 }
 
 func TestLargerPortfolio(t *testing.T) {
-	p, err := NewPortfolio("XXX", "AUD")
-	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
-	}
-	code := p.GetCode()
-	if code != "XXX" {
-		t.Errorf("Unexpected portfolio code: wanted 'XXX', got '%s'", code)
-	}
-
-	stock1, err1 := NewStock("ZZA AU", "AUD")
-	stock2, err2 := NewStock("ZZU US", "USD")
-	stock3, err3 := NewStock("ZZG AU", "GBP")
-	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
-		t.Errorf("Error in NewStock - %s", err)
-	}
-
-	aud, err1 := NewCash("AUD")
-	usd, err2 := NewCash("USD")
-	gbp, err3 := NewCash("GBP")
-	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
-		t.Errorf("Error in NewCash - %s", err)
+	p, err1 := NewPortfolio("XXX", "AUD")
+	stock1, err2 := NewStock("ZZA AU", "AUD")
+	stock2, err3 := NewStock("ZZU US", "USD")
+	stock3, err4 := NewStock("ZZG AU", "GBP")
+	aud, err5 := NewCash("AUD")
+	usd, err6 := NewCash("USD")
+	gbp, err7 := NewCash("GBP")
+	if err := btutil.AnyValidError(err1, err2, err3, err4, err5, err6, err7); err != nil {
+		t.Fatalf("Error in asset init - %s", err)
 	}
 
 	// add 100 shares of each stock and $100 for each currency
@@ -294,21 +285,13 @@ func TestLargerPortfolio(t *testing.T) {
 }
 
 func TestPortfolioUnitsWeight(t *testing.T) {
-	p, err := NewPortfolio("XXX", "AUD")
-	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
-	}
-
-	stock1, err1 := NewStock("ZZA AU", "AUD")
-	stock2, err2 := NewStock("ZZU US", "USD")
-	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Error in NewStock - %s", err)
-	}
-
-	aud, err1 := NewCash("AUD")
-	usd, err2 := NewCash("USD")
-	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Error in NewCash - %s", err)
+	p, err1 := NewPortfolio("XXX", "AUD")
+	stock1, err2 := NewStock("ZZA AU", "AUD")
+	stock2, err3 := NewStock("ZZU US", "USD")
+	aud, err4 := NewCash("AUD")
+	usd, err5 := NewCash("USD")
+	if err := btutil.AnyValidError(err1, err2, err3, err4, err5); err != nil {
+		t.Fatalf("Error in asset init - %s", err)
 	}
 
 	// this portfolio is currently empty
@@ -394,15 +377,11 @@ func TestPortfolioUnitsWeight(t *testing.T) {
 }
 
 func TestPortfolioSnapshots(t *testing.T) {
-	p, err := NewPortfolio("XXX", "AUD")
-	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
-	}
-
-	stock, err1 := NewStock("ZZA AU", "AUD")
-	cash, err2 := NewCash("AUD")
-	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Asset error - %s", err)
+	p, err1 := NewPortfolio("XXX", "AUD")
+	stock, err2 := NewStock("ZZA AU", "AUD")
+	cash, err3 := NewCash("AUD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Fatalf("Asset error - %s", err)
 	}
 
 	// add 100 units of each
@@ -467,7 +446,7 @@ func TestPortfolioNoFxRate(t *testing.T) {
 	stock, err2 := NewStock("ZZA US", "USD")
 	audusd, err3 := NewFxRate("AUDUSD", Price{Float64: 0.75, Valid: true})
 	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
-		t.Errorf("Error in asset creation - %s", err)
+		t.Fatalf("Error in asset creation - %s", err)
 	}
 
 	stock.SetPrice(Price{Float64: 3.0, Valid: true})
@@ -500,7 +479,7 @@ func TestPortfolioNoFxRate(t *testing.T) {
 func TestPortfolioInvalidAsset(t *testing.T) {
 	p, err := NewPortfolio("XXX", "AUD")
 	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 
 	// stock has an invalid base currency
@@ -525,7 +504,7 @@ func TestGetValueWeightsError(t *testing.T) {
 	cash, err2 := NewCash("AUD")
 	stock, err3 := NewStock("ZZB AU", "AUD")
 	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
-		t.Errorf("Error in asset creation - %s", err)
+		t.Fatalf("Error in asset creation - %s", err)
 	}
 
 	// transfer 100 shares of stock and 100 AUD to the portfolio
@@ -653,7 +632,7 @@ func TestGetValueWeightsError(t *testing.T) {
 func TestNewPortfolioSnapshotError(t *testing.T) {
 	p, err := NewPortfolio("XXX", "AUD")
 	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 
 	t1 := time.Date(2020, time.December, 14, 0, 0, 0, 0, time.UTC)
@@ -671,7 +650,7 @@ func TestPortfolioCopy(t *testing.T) {
 	stock1, err2 := NewStock("ZZA AU", "AUD")
 	stock2, err3 := NewStock("ZZB AU", "AUD")
 	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
-		t.Errorf("Error in asset init - %s", err)
+		t.Fatalf("Error in asset init - %s", err)
 	}
 
 	portfolio.ModifyPositions(stock1, 100)
@@ -737,7 +716,7 @@ func (t *testRule) Passes(portfolio *Portfolio) (bool, error) {
 func TestPortfolioCompliance(t *testing.T) {
 	portfolio, err := NewPortfolio("XXX", "AUD")
 	if err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 
 	r1 := testRule{}
@@ -820,7 +799,7 @@ func TestPassesCompliance(t *testing.T) {
 	portfolio1, err1 := NewPortfolio("XXX", "AUD")
 	portfolio2, err2 := NewPortfolio("YYY", "AUD")
 	if err := btutil.AnyValidError(err1, err2); err != nil {
-		t.Errorf("Error in NewPortfolio - %s", err)
+		t.Fatalf("Error in NewPortfolio - %s", err)
 	}
 
 	// compliance should pass where there are no rules.
@@ -910,7 +889,7 @@ func TestTrade(t *testing.T) {
 	stock, err2 := NewStock("ZZB AU", "AUD")
 	cash, err3 := NewCash("AUD")
 	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
-		t.Errorf("Error during asset init - %s", err)
+		t.Fatalf("Error during asset init - %s", err)
 	}
 
 	portfolio.Transfer(cash, 1000)
