@@ -932,3 +932,28 @@ func TestTrade(t *testing.T) {
 		t.Errorf("Unexpected error string '%s'", errStr)
 	}
 }
+
+func TestGetAllUnits(t *testing.T) {
+	portfolio, err1 := NewPortfolio("XXX", "AUD")
+	stock1, err2 := NewStock("ZZA AU", "AUD")
+	stock2, err3 := NewStock("ZZU US", "USD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Fatalf("Error in asset init - %s", err)
+	}
+
+	// this portfolio is currently empty
+	if len(portfolio.GetAllUnits()) != 0 {
+		t.Fatal("Expecting this portfolio to have no holdings")
+	}
+
+	// transfer assets to the portfolio
+	portfolio.Transfer(stock1, 100)
+	portfolio.Transfer(stock2, 200)
+	holdings := portfolio.GetAllUnits()
+	if units, _ := holdings[stock1]; units != 100 {
+		t.Errorf("Unexpected units in stock1 - wanted 100, got %0.2f", units)
+	}
+	if units, _ := holdings[stock2]; units != 200 {
+		t.Errorf("Unexpected units in stock1 - wanted 200, got %0.2f", units)
+	}
+}

@@ -175,6 +175,15 @@ func (p *Portfolio) GetUnits(a IAssetReadOnly) float64 {
 	return position.GetUnits()
 }
 
+// GetAllUnits returns the units held for all assets.
+func (p *Portfolio) GetAllUnits() map[IAssetReadOnly]float64 {
+	allUnits := make(map[IAssetReadOnly]float64)
+	for asset, position := range p.positions {
+		allUnits[asset] = position.GetUnits()
+	}
+	return allUnits
+}
+
 // GetWeight returns the portfolio weight in a given asset.
 func (p *Portfolio) GetWeight(a IAssetReadOnly) (Weight, error) {
 	_, positionWeights, err := p.GetValueWeights()
