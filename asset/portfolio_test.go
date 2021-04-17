@@ -385,8 +385,8 @@ func TestPortfolioSnapshots(t *testing.T) {
 	}
 
 	// add 100 units of each
-	p.ModifyPositions(stock, 100)
-	p.ModifyPositions(cash, 100)
+	p.Transfer(stock, 100)
+	p.Transfer(cash, 100)
 	stock.SetPrice(Price{Float64: 1.5, Valid: true})
 
 	// portfolio value is 1.50 * 100 + 100 = 250 AUD
@@ -438,6 +438,15 @@ func TestPortfolioSnapshots(t *testing.T) {
 	}
 	if wCash.Float64 != 0.25 {
 		t.Errorf("Unexpected cash weight: wanted 0.25, got %0.2f", wCash.Float64)
+	}
+
+	// check the units held
+	holdings := snap2.GetHoldings()
+	if stockUnits, _ := holdings[stock]; stockUnits != 100 {
+		t.Errorf("Unexpected stockUnits - wanted 100, got %0.2f", stockUnits)
+	}
+	if cashUnits, _ := holdings[cash]; cashUnits != 100 {
+		t.Errorf("Unexpected cashUnits - wanted 100, got %0.2f", cashUnits)
 	}
 }
 

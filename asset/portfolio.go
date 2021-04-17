@@ -46,14 +46,17 @@ type PortfolioSnapshot struct {
 	timestamp time.Time
 	value     Price
 	weights   map[IAssetReadOnly]Weight
+	holdings  map[IAssetReadOnly]float64
 }
 
 func newPortfolioSnapshot(timestamp time.Time, p *Portfolio) (PortfolioSnapshot, error) {
-	portfolioValue, positionWeights, err := p.GetValueWeights()
+	portfolioValue, portfolioWeights, err := p.GetValueWeights()
+	portfolioHoldings := p.GetAllUnits()
 	snap := PortfolioSnapshot{
 		timestamp: timestamp,
 		value:     portfolioValue,
-		weights:   positionWeights,
+		weights:   portfolioWeights,
+		holdings:  portfolioHoldings,
 	}
 	return snap, err
 }
@@ -71,6 +74,11 @@ func (s PortfolioSnapshot) GetValue() Price {
 // GetWeights returns the portfolio weights for our snapshot.
 func (s PortfolioSnapshot) GetWeights() map[IAssetReadOnly]Weight {
 	return s.weights
+}
+
+// GetHoldings returns the portfolio holdings for our snapshot.
+func (s PortfolioSnapshot) GetHoldings() map[IAssetReadOnly]float64 {
+	return s.holdings
 }
 
 // Portfolio consists of a collection of positions.
