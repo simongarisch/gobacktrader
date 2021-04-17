@@ -178,6 +178,8 @@ func (backtest *Backtest) HistoryToCsv(filePath string) error {
 	snapshotTimes := backtest.snapshotTimes
 
 	// create the headers for our csv file
+	// the format will be
+	// PORTFOLIO_VALUE, ASSET_PRICES, PORTFOLIO_ASSET_HOLDINGS(UNITS)
 	headers := []string{"TimeStamp"}
 	for _, portfolio := range backtest.portfolios {
 		header := "PORTFOLIO_" + cleanCode(portfolio.GetCode()) + "_VALUE"
@@ -187,7 +189,16 @@ func (backtest *Backtest) HistoryToCsv(filePath string) error {
 		header := cleanCode(asset.GetTicker()) + "_PRICE"
 		headers = append(headers, header)
 	}
+	for _, portfolio := range backtest.portfolios {
+		portfolioCode := cleanCode(portfolio.GetCode())
+		for _, asset := range backtest.assets {
+			assetTicker := cleanCode(asset.GetTicker())
+			header := fmt.Sprintf("%s_%s_UNITS", portfolioCode, assetTicker)
+			headers = append(headers, header)
+		}
+	}
 
+	// create the csv file to hold this data
 	file, err := os.Create(filePath)
 	defer file.Close()
 	if err != nil {
@@ -226,7 +237,7 @@ func (backtest *Backtest) HistoryToCsv(filePath string) error {
 					valueString = fmt.Sprintf("%0.2f", portfolioValue.Float64)
 				}
 			}
-			row = append(row, valueString)			
+			row = append(row, valueString)
 		}
 
 		for _, assetHistory := range assetHistories {
@@ -239,6 +250,19 @@ func (backtest *Backtest) HistoryToCsv(filePath string) error {
 				}
 			}
 			row = append(row, valueString)
+		}
+
+		// then add portfolio units in these assets
+		for _, portfolioHistory := range portfolioHistories {
+			portfolioSnapshot, ok := portfolioHistory[snapshotTime]
+			if ok {
+				portfolioHoldings := portfolioSnapshot.GetHoldings()
+				for _, asset := range backtest.assets {
+					assetHoldingUnits, _ := portfolioHoldings[asset]
+					strAssetHoldingUnits := fmt.Sprintf("%0.2f", assetHoldingUnits)
+					row = append(row, strAssetHoldingUnits)
+				}
+			}
 		}
 
 		// write this row to csv
