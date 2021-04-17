@@ -16,3 +16,6 @@
 
 # notebook checkpoints
 \.ipynb_checkpoints
+
+# test files
+test.csv
