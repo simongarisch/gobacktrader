@@ -100,3 +100,28 @@ func TestSgn(t *testing.T) {
 		t.Error("Unexpected sign")
 	}
 }
+
+func TestDate(t *testing.T) {
+	date := Date(2021, 4, 1)
+	if date.Year() != 2021 {
+		t.Error("Unexpected year")
+	}
+	if date.Month().String() != "April" {
+		t.Error("Unexpected month")
+	}
+	if date.Day() != 1 {
+		t.Error("Unexpected day")
+	}
+	if date.Hour() != 0 {
+		t.Error("Unexpected hour")
+	}
+	if date.Minute() != 0 {
+		t.Error("Unexpected minute")
+	}
+	if date.Second() != 0 {
+		t.Error("Unexpected second")
+	}
+	if zone, _ := date.Zone(); zone != "UTC" {
+		t.Error("Unexpected time zone")
+	}
+}
