@@ -2,6 +2,9 @@ package datasources
 
 import (
 	"encoding/json"
+	"errors"
+	"gobacktrader/asset"
+	"gobacktrader/events"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -36,25 +39,25 @@ type FmpCloudResponse struct {
 
 // FmpCloudQuery defines the query details when scraping data from fmpcloud.io
 type FmpCloudQuery struct {
-	stock     string
-	startDate time.Time
-	endDate   time.Time
-	apiKey    string
+	targetAsset asset.IAssetReadOnly
+	startDate   time.Time
+	endDate     time.Time
+	apiKey      string
 }
 
 // NewFmpCloudQuery returns a new instance of FmpCloudQuery.
-func NewFmpCloudQuery(stock string, startDate time.Time, endDate time.Time) FmpCloudQuery {
+func NewFmpCloudQuery(targetAsset asset.IAssetReadOnly, startDate time.Time, endDate time.Time) FmpCloudQuery {
 	return FmpCloudQuery{
-		stock:     stock,
-		startDate: startDate,
-		endDate:   endDate,
-		apiKey:    "demo",
+		targetAsset: targetAsset,
+		startDate:   startDate,
+		endDate:     endDate,
+		apiKey:      "demo",
 	}
 }
 
-// GetStock returns the query stock code.
-func (q FmpCloudQuery) GetStock() string {
-	return q.stock
+// GetAsset returns the query asset instance.
+func (q FmpCloudQuery) GetAsset() asset.IAssetReadOnly {
+	return q.targetAsset
 }
 
 // GetStartDate returns the query start date.
@@ -81,7 +84,7 @@ func (q *FmpCloudQuery) SetAPIKey(apiKey string) *FmpCloudQuery {
 // GetURL returns the formatted query URL.
 func (q FmpCloudQuery) GetURL() string {
 	replacements := map[string]string{
-		"{STOCK}":      q.stock,
+		"{STOCK}":      q.targetAsset.GetTicker(),
 		"{START_DATE}": q.startDate.Format("2006-01-02"),
 		"{END_DATE}":   q.endDate.Format("2006-01-02"),
 		"{API_KEY}":    q.apiKey,
@@ -109,4 +112,34 @@ func (q FmpCloudQuery) Run() (FmpCloudResponse, error) {
 
 	err = json.Unmarshal(data, &fmpCloudResponse)
 	return fmpCloudResponse, err
+}
+
+// GenerateEvents returns all price events from the fmpcloud response.
+func (q FmpCloudQuery) GenerateEvents() ([]events.AssetPriceEvent, error) {
+	var priceEvents []events.AssetPriceEvent
+
+	targetAsset, ok := q.GetAsset().(asset.IAssetWriteOnly)
+	if !ok {
+		return priceEvents, errors.New("Unable to cast to IAssetWriteOnly")
+	}
+
+	fmpCloudResponse, err := q.Run()
+	if err != nil {
+		return priceEvents, err
+	}
+
+	dateLayout := "2006-01-02"
+	for _, item := range fmpCloudResponse.Historical {
+		datestr, close := item.Date, item.AdjClose
+		eventTime, err := time.Parse(dateLayout, datestr)
+		if err != nil {
+			return priceEvents, err
+		}
+
+		price := asset.Price{Float64: close, Valid: true}
+		assetPriceEvent := events.NewAssetPriceEvent(targetAsset, eventTime, price)
+		priceEvents = append(priceEvents, assetPriceEvent)
+	}
+
+	return priceEvents, nil
 }
