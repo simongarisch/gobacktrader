@@ -9,7 +9,7 @@ import (
 func TestAssetPriceEvent(t *testing.T) {
 	stock, err := asset.NewStock("ZZB AU", "AUD")
 	if err != nil {
-		t.Errorf("Error in asset.NewStock - %s", err)
+		t.Fatalf("Error in asset.NewStock - %s", err)
 	}
 	eventTime := time.Date(2021, time.March, 13, 0, 0, 0, 0, time.UTC)
 	price := asset.Price{Float64: 3.00, Valid: true}

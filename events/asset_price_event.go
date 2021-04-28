@@ -28,3 +28,8 @@ func (e *AssetPriceEvent) Process() error {
 	e.processed = true
 	return nil
 }
+
+// GetPrice returns the event price.
+func (e AssetPriceEvent) GetPrice() asset.Price {
+	return e.price
+}
