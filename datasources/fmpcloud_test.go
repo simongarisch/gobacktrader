@@ -81,3 +81,25 @@ func TestGenerateEvents(t *testing.T) {
 		t.Errorf("Unable to find price event for 23 Apr 2021")
 	}
 }
+
+func TestSetGetTicker(t *testing.T) {
+	query := NewFmpCloudQuery(testAsset, testStartDate, testEndDate)
+	ticker := query.GetTicker()
+	apiKey := query.GetAPIKey()
+	if ticker != "AAPL" {
+		t.Fatalf("Unexpected ticker - wanted 'AAPL', got '%s'", ticker)
+	}
+	if apiKey != "demo" {
+		t.Fatalf("Unexpected API key - wanted 'demo', got '%s'", apiKey)
+	}
+
+	query.SetTicker("XXXX").SetAPIKey("YYYY")
+	ticker = query.GetTicker()
+	apiKey = query.GetAPIKey()
+	if ticker != "XXXX" {
+		t.Fatalf("Unexpected ticker - wanted 'XXXX', got '%s'", ticker)
+	}
+	if apiKey != "YYYY" {
+		t.Fatalf("Unexpected API key - wanted 'YYYY', got '%s'", apiKey)
+	}
+}

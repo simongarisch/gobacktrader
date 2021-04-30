@@ -43,6 +43,7 @@ type FmpCloudQuery struct {
 	startDate   time.Time
 	endDate     time.Time
 	apiKey      string
+	ticker      string
 }
 
 // NewFmpCloudQuery returns a new instance of FmpCloudQuery.
@@ -81,10 +82,26 @@ func (q *FmpCloudQuery) SetAPIKey(apiKey string) *FmpCloudQuery {
 	return q
 }
 
+// GetTicker returns the ticker used for our query.
+func (q FmpCloudQuery) GetTicker() string {
+	ticker := q.ticker
+	if ticker != "" {
+		return ticker
+	}
+	return q.targetAsset.GetTicker()
+}
+
+// SetTicker sets the ticker used for our query and returns the query instance.
+// The ticker used by fmp may differ from the asset ticker, so this provides a work around.
+func (q *FmpCloudQuery) SetTicker(ticker string) *FmpCloudQuery {
+	q.ticker = ticker
+	return q
+}
+
 // GetURL returns the formatted query URL.
 func (q FmpCloudQuery) GetURL() string {
 	replacements := map[string]string{
-		"{STOCK}":      q.targetAsset.GetTicker(),
+		"{STOCK}":      q.GetTicker(),
 		"{START_DATE}": q.startDate.Format("2006-01-02"),
 		"{END_DATE}":   q.endDate.Format("2006-01-02"),
 		"{API_KEY}":    q.apiKey,
