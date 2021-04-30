@@ -76,3 +76,15 @@ func Sgn(n float64) float64 {
 func Date(year, month, day int) time.Time {
 	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 }
+
+// ReplaceStrings takes an input string and makes multiple replacements.
+func ReplaceStrings(s string, replacements map[string]string) string {
+	if replacements == nil {
+		return s
+	}
+
+	for oldString, newString := range replacements {
+		s = strings.ReplaceAll(s, oldString, newString)
+	}
+	return s
+}

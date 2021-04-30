@@ -125,3 +125,21 @@ func TestDate(t *testing.T) {
 		t.Error("Unexpected time zone")
 	}
 }
+
+func TestReplaceStrings(t *testing.T) {
+	s := ReplaceStrings("mystring", nil)
+	if s != "mystring" {
+		t.Errorf("Unexpected string - wanted 'mystring', got '%s'", s)
+	}
+
+	s = "{STOCK} and {API_KEY}"
+	replacements := map[string]string{
+		"{STOCK}":   "AAPL",
+		"{API_KEY}": "demo",
+	}
+
+	s = ReplaceStrings(s, replacements)
+	if s != "AAPL and demo" {
+		t.Errorf("Unexpected string - wanted 'AAPL and demo', got '%s'", s)
+	}
+}
