@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"gobacktrader/asset"
+	"gobacktrader/btutil"
 	"gobacktrader/events"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -106,10 +106,7 @@ func (q FmpCloudQuery) GetURL() string {
 		"{END_DATE}":   q.endDate.Format("2006-01-02"),
 		"{API_KEY}":    q.apiKey,
 	}
-	urlTail := fmpURLTail
-	for oldString, newString := range replacements {
-		urlTail = strings.ReplaceAll(urlTail, oldString, newString)
-	}
+	urlTail := btutil.ReplaceStrings(fmpURLTail, replacements)
 	return fmpBaseURL + urlTail
 }
 
