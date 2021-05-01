@@ -39,63 +39,19 @@ type FmpCloudResponse struct {
 
 // FmpCloudQuery defines the query details when scraping data from fmpcloud.io
 type FmpCloudQuery struct {
-	targetAsset asset.IAssetReadOnly
-	startDate   time.Time
-	endDate     time.Time
-	apiKey      string
-	ticker      string
+	Query
 }
 
 // NewFmpCloudQuery returns a new instance of FmpCloudQuery.
 func NewFmpCloudQuery(targetAsset asset.IAssetReadOnly, startDate time.Time, endDate time.Time) FmpCloudQuery {
 	return FmpCloudQuery{
-		targetAsset: targetAsset,
-		startDate:   startDate,
-		endDate:     endDate,
-		apiKey:      "demo",
+		Query: Query{
+			targetAsset: targetAsset,
+			startDate:   startDate,
+			endDate:     endDate,
+			apiKey:      "demo",
+		},
 	}
-}
-
-// GetAsset returns the query asset instance.
-func (q FmpCloudQuery) GetAsset() asset.IAssetReadOnly {
-	return q.targetAsset
-}
-
-// GetStartDate returns the query start date.
-func (q FmpCloudQuery) GetStartDate() time.Time {
-	return q.startDate
-}
-
-// GetEndDate returns the query end date.
-func (q FmpCloudQuery) GetEndDate() time.Time {
-	return q.endDate
-}
-
-// GetAPIKey gets the query api key.
-func (q FmpCloudQuery) GetAPIKey() string {
-	return q.apiKey
-}
-
-// SetAPIKey sets the query api key.
-func (q *FmpCloudQuery) SetAPIKey(apiKey string) *FmpCloudQuery {
-	q.apiKey = apiKey
-	return q
-}
-
-// GetTicker returns the ticker used for our query.
-func (q FmpCloudQuery) GetTicker() string {
-	ticker := q.ticker
-	if ticker != "" {
-		return ticker
-	}
-	return q.targetAsset.GetTicker()
-}
-
-// SetTicker sets the ticker used for our query and returns the query instance.
-// The ticker used by fmp may differ from the asset ticker, so this provides a work around.
-func (q *FmpCloudQuery) SetTicker(ticker string) *FmpCloudQuery {
-	q.ticker = ticker
-	return q
 }
 
 // GetURL returns the formatted query URL.
