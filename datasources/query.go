@@ -9,6 +9,7 @@ import (
 // IAssetPriceQuery defines the asset price query interface.
 // These must have the ability to generate asset price events.
 type IAssetPriceQuery interface {
+	GetURL() string
 	GenerateEvents() ([]events.AssetPriceEvent, error)
 }
 
