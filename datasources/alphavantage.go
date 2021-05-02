@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"gobacktrader/asset"
+	"gobacktrader/btutil"
 	"gobacktrader/events"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -63,10 +63,8 @@ func (q AlphaVantageQuery) GetURL() string {
 		"{STOCK}":   q.GetTicker(),
 		"{API_KEY}": q.apiKey,
 	}
-	urlTail := avURLtail
-	for oldString, newString := range replacements {
-		urlTail = strings.ReplaceAll(urlTail, oldString, newString)
-	}
+
+	urlTail := btutil.ReplaceStrings(avURLtail, replacements)
 	return avBaseURL + urlTail
 }
 
