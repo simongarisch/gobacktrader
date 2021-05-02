@@ -28,7 +28,7 @@ func TestGenerateEvents(t *testing.T) {
 
 	numEvents := len(events)
 	if numEvents != 16 {
-		t.Errorf("Unexpected number of events - wanted 10, got %d", numEvents)
+		t.Errorf("Unexpected number of events - wanted 16, got %d", numEvents)
 	}
 
 	found := false
