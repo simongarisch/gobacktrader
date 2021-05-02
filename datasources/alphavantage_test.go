@@ -28,6 +28,7 @@ func TestAlphaVantageGenerateEvents(t *testing.T) {
 	if query.GetAPIKey() == "demo" {
 		t.Skip() // data won't always get passed back for the demo account
 	}
+
 	events, err := query.GenerateEvents()
 	if err != nil {
 		t.Fatalf("Error in GenerateEvents - %s", err)
