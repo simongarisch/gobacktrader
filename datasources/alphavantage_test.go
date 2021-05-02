@@ -26,7 +26,7 @@ func TestAlphaVantageGenerateEvents(t *testing.T) {
 	query := NewAlphaVantageQuery(testAsset, testStartDate, testEndDate)
 	// query.SetAPIKey("----")
 	if query.GetAPIKey() == "demo" {
-		t.Skip() // data won't always get passed back for the demo account
+		t.Skip("data won't always get passed back for the demo account")
 	}
 
 	events, err := query.GenerateEvents()
