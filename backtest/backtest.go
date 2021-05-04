@@ -107,6 +107,13 @@ func (backtest *Backtest) HasAsset(a asset.IAssetReadOnly) bool {
 	return false
 }
 
+// AddEvents adds multiple events to the backtest events collection.
+func (backtest *Backtest) AddEvents(events []events.IEvent) {
+	for _, event := range events {
+		backtest.AddEvent(event)
+	}
+}
+
 // AddEvent adds a new event to the backtest events collection.
 func (backtest *Backtest) AddEvent(event events.IEvent) {
 	backtest.events.Add(event)
