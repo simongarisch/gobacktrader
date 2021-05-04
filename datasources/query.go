@@ -10,7 +10,12 @@ import (
 // These must have the ability to generate asset price events.
 type IAssetPriceQuery interface {
 	GetURL() string
-	GenerateEvents() ([]events.AssetPriceEvent, error)
+	GenerateEvents() ([]events.IEvent, error)
+}
+
+// IEventHasPrice defines an interface for events with a price attribute.
+type IEventHasPrice interface {
+	GetPrice() asset.Price
 }
 
 // Query is the base struct for data queries
