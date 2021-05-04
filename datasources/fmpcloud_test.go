@@ -35,10 +35,16 @@ func TestGenerateEvents(t *testing.T) {
 	for _, event := range events {
 		if event.GetTime().Equal(testEndDate) {
 			found = true
-			price := event.GetPrice()
+			priceEvent, ok := event.(IEventHasPrice)
+			if !ok {
+				t.Fatal("Cannot cast to interface IEventHasPrice")
+			}
+
+			price := priceEvent.GetPrice()
 			if !price.Valid {
 				t.Error("Expecting a valid price")
 			}
+
 			if price.Float64 != 134.32 {
 				t.Error("Unexpected price")
 			}

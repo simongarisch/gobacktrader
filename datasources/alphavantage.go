@@ -87,8 +87,8 @@ func (q AlphaVantageQuery) Run() (AlphaVantageResponse, error) {
 }
 
 // GenerateEvents returns all price events from the fmpcloud response.
-func (q AlphaVantageQuery) GenerateEvents() ([]events.AssetPriceEvent, error) {
-	var priceEvents []events.AssetPriceEvent
+func (q AlphaVantageQuery) GenerateEvents() ([]events.IEvent, error) {
+	var priceEvents []events.IEvent
 
 	targetAsset, ok := q.GetAsset().(asset.IAssetWriteOnly)
 	if !ok {
@@ -120,7 +120,7 @@ func (q AlphaVantageQuery) GenerateEvents() ([]events.AssetPriceEvent, error) {
 			}
 			price := asset.Price{Float64: close, Valid: true}
 			assetPriceEvent := events.NewAssetPriceEvent(targetAsset, eventTime, price)
-			priceEvents = append(priceEvents, assetPriceEvent)
+			priceEvents = append(priceEvents, &assetPriceEvent)
 		}
 	}
 
