@@ -3,6 +3,8 @@ package backtest
 import (
 	"gobacktrader/asset"
 	"gobacktrader/btutil"
+	"gobacktrader/compliance"
+	"gobacktrader/datasources"
 	"gobacktrader/events"
 	"gobacktrader/trade"
 	"os"
@@ -236,6 +238,80 @@ func TestBacktestBasicStrategy(t *testing.T) {
 	}
 	if !snapshotTimes[2].Equal(t3) {
 		t.Error("Unexpected third time")
+	}
+
+	// write this history to csv
+	err = backtest.HistoryToCsv("test")
+	if err != nil {
+		t.Fatalf("Error in HistoryToCsv - %s", err)
+	}
+
+	err = os.Remove("test.csv")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAaplTrading(t *testing.T) {
+	// initialise our portfolio and assets
+	portfolio, err1 := asset.NewPortfolio("MY_ACCOUNT", "USD")
+	aapl, err2 := asset.NewStock("AAPL", "USD")
+	usd, err3 := asset.NewCash("USD")
+	if err := btutil.AnyValidError(err1, err2, err3); err != nil {
+		t.Fatalf("Error in asset creation - %s", err)
+	}
+
+	// transfer 1M USD to the portfolio
+	portfolio.Transfer(usd, 1e6)
+
+	// create a compliance rule where we cannot hold more than 500 shares of AAPL stock
+	stockLimit := compliance.NewUnitLimit(aapl, 500)
+	portfolio.AddComplianceRule(stockLimit)
+
+	// create our trading strategy to buy 100 shares of AAPL on each cycle
+	generateTrades := func() ([]*trade.Trade, error) {
+		var trades []*trade.Trade
+		price := aapl.GetPrice()
+		if price.Valid {
+			newTrade := trade.NewTrade(portfolio, aapl, 100)
+			trades = append(trades, newTrade)
+		}
+
+		return trades, nil
+	}
+
+	// create a strategy instance
+	strategy := NewStrategy(generateTrades)
+
+	// create our backtest instance, register assets
+	backtest := NewBacktest(strategy)
+	backtest.RegisterPortfolio(portfolio)
+	backtest.RegisterAsset(aapl)
+	backtest.RegisterAsset(usd)
+
+	// get events for the backtest
+	startDate := btutil.Date(2021, 4, 1)
+	endDate := btutil.Date(2021, 4, 30)
+	dataQuery := datasources.NewFmpCloudQuery(aapl, startDate, endDate)
+	events, err := dataQuery.GenerateEvents()
+	if err != nil {
+		t.Fatalf("Error in GenerageEvents - %s", err)
+	}
+
+	backtest.AddEvents(events)
+
+	// run the backtest
+	err = backtest.Run()
+	if err != nil {
+		t.Fatalf("Error in backtest.Run() - %s", err)
+	}
+
+	// check the portfolio holdings
+	// we should have kept buying aapl until
+	// we hit a compliance cap at 500 shares
+	aaplPosition := portfolio.GetUnits(aapl)
+	if aaplPosition != 500 {
+		t.Errorf("Unexpected aapl position - wanted 500, got %0.2f", aaplPosition)
 	}
 
 	// write this history to csv
